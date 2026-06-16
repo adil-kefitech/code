@@ -1,0 +1,91 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "A user of the Petstock platform.",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "email": { "type": "string", "description": "The user's email address." },
+        "photoURL": { "type": "string", "description": "URL to the user's profile picture." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "listing": {
+      "title": "Pet Listing",
+      "description": "A listing to buy or sell a pet.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the listing." },
+        "description": { "type": "string", "description": "Detailed description of the pet." },
+        "price": { "type": "number", "description": "Price of the pet." },
+        "category": { "type": "string", "description": "Category (e.g., Dog, Cat, Bird)." },
+        "breed": { "type": "string", "description": "Breed of the pet." },
+        "age": { "type": "string", "description": "Age of the pet." },
+        "location": { "type": "string", "description": "Location of the seller." },
+        "images": { "type": "array", "items": { "type": "string" }, "description": "URLs of the pet images." },
+        "sellerId": { "type": "string", "description": "User ID of the seller." },
+        "status": { "type": "string", "enum": ["active", "sold", "archived"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "description", "price", "category", "location", "sellerId", "status", "createdAt", "updatedAt"]
+    },
+    "savedListing": {
+      "title": "Saved Listing",
+      "description": "A mapping of a user's saved/favorited listings.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "listingId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "listingId", "createdAt"]
+    },
+    "chat": {
+      "title": "Chat",
+      "description": "A chat conversation between two users regarding a listing.",
+      "type": "object",
+      "properties": {
+        "participantIds": { "type": "array", "items": { "type": "string" } },
+        "listingId": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["participantIds", "listingId", "updatedAt"]
+    },
+    "message": {
+      "title": "Message",
+      "description": "A message within a chat.",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "text", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/user" },
+      "description": "User profiles."
+    },
+    "listings/{listingId}": {
+      "schema": { "$ref": "#/entities/listing" },
+      "description": "Marketplace listings."
+    },
+    "savedListings/{savedId}": {
+      "schema": { "$ref": "#/entities/savedListing" },
+      "description": "Listings saved by users."
+    },
+    "chats/{chatId}": {
+      "schema": { "$ref": "#/entities/chat" },
+      "description": "Chat conversations."
+    },
+    "chats/{chatId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/message" },
+      "description": "Messages within a chat."
+    }
+  }
+}

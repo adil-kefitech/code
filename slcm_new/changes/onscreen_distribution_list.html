@@ -1,0 +1,1071 @@
+{% extends 'base.html'%}
+{% load static %}
+{% block additional_styles %}
+<!-- BEGIN GLOBAL MANDATORY STYLES -->
+<link href="https://fonts.googleapis.com/css?family=Quicksand:400,500,600,700&display=swap" rel="stylesheet">
+<!-- END GLOBAL MANDATORY STYLES -->
+<!-- BEGIN THEME GLOBAL STYLES -->
+<link href="{%static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
+<link href="{%static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
+<!-- END THEME GLOBAL STYLES -->
+<!--  BEGIN CUSTOM STYLE FILE  -->
+<link href="{%static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" type="text/css" href="{%static 'plugins/jquery-step/jquery.steps.css'%}">
+<link rel="stylesheet" type="text/css" href="{%static 'assets/css/forms/theme-checkbox-radio.css'%}">
+<link href="{%static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
+<link href="{%static 'plugins/noUiSlider/custom-nouiSlider.css'%}" rel="stylesheet" type="text/css">
+<link href="{%static 'plugins/bootstrap-range-Slider/bootstrap-slider.css'%}" rel="stylesheet" type="text/css">
+
+<style>
+    #dbl {
+        display: none;
+    }
+
+    #dblz {
+        display: none;
+    }
+
+    #add {
+        display: none;
+    }
+</style>
+<!--  END CUSTOM STYLE FILE  -->
+<style>
+    input[type=date]:required:invalid::-webkit-datetime-edit {
+        color: transparent;
+    }
+
+    input[type=date]:focus::-webkit-datetime-edit {
+        color: black !important;
+    }
+
+    input[type=month]:required:invalid::-webkit-datetime-edit {
+        color: transparent;
+    }
+
+    input[type=month]:focus::-webkit-datetime-edit {
+        color: black !important;
+    }
+</style>
+<!-- BEGIN PAGE LEVEL STYLES -->
+<link rel="stylesheet" type="text/css" href="{%static 'plugins/table/datatable/datatables.css'%}">
+<link rel="stylesheet" type="text/css" href="{%static 'plugins/table/datatable/dt-global_style.css'%}">
+<!-- END PAGE LEVEL STYLES -->
+<!-- BEGIN THEME GLOBAL STYLES -->
+<link href="{%static 'plugins/animate/animate.css'%}" rel="stylesheet" type="text/css" />
+<script src="{%static 'plugins/sweetalerts/promise-polyfill.js'%}"></script>
+<link href="{%static 'plugins/sweetalerts/sweetalert2.min.css'%}" rel="stylesheet" type="text/css" />
+<link href="{%static 'plugins/sweetalerts/sweetalert.css'%}" rel="stylesheet" type="text/css" />
+<link href="{%static 'assets/css/components/custom-sweetalert.css'%}" rel="stylesheet" type="text/css" />
+<!-- END THEME GLOBAL STYLES -->
+{% endblock additional_styles %}
+
+{% block content %}
+
+
+<!--  BEGIN CONTENT AREA  -->
+
+<div class="row layout-top-spacing" id="cancel-row">
+    <div class="d-flex justify-content-between w-100">
+        <div id="date_time_picker" class=" layout-top-spacing">
+            <div class="seperator-header mx-3">
+                <h4 class="">On-Screen Distribution List</h4>
+            </div>
+        </div>
+        <div>
+            <nav class="breadcrumb-one" aria-label="breadcrumb">
+                <ol class="breadcrumb bg-white mt-3">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page"><span>On-Screen Distribution List</span>
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    <div class="container">
+        <div class="pl-4">
+            <form name="dform" method="GET">
+                {% csrf_token %}
+                <div class="col mb-4" style="margin: auto;">
+                    <div class="filterz" id="filterz">
+                        <div class="row form-sec">
+                            <div class="col-8 mb-4 mt-1">
+                                <div class="select">
+                                    <select class="select-text" id="qpcode" name="qpcode" required>
+                                        <option value="" disabled selected></option>
+                                        {% for qpcode in data.qp_code_list %}
+                                        <option value="{{qpcode.qp_code}}">{{qpcode.qp_code}}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <span class="select-highlight"></span>
+                                    <span class="select-bar"></span>
+                                    <label class="select-label">QP Code</label>
+                                </div>
+                            </div>
+                            <!-- <div class="col-8 mb-4 mt-1">
+                                <div class="select">
+                                    <select class="select-text" id="camp" name="camp" required>
+                                        <option value="" disabled selected></option>
+                                            {% for i in  data.camp_list %}
+                                                            <option value="{{i}}" >{{i}}</option>
+                                                            {% endfor %} 
+                                    </select>
+                                    <span class="select-highlight"></span>
+                                    <span class="select-bar"></span>
+                                    <label class="select-label">Subject</label>
+                                </div>
+                            </div> -->
+
+                        </div>
+                        <div class="col-12" style="text-align: right; padding: 0px;">
+                            <button class="mt-1 btn btn-danger mb-1" type="reset" id="reset_button">Reset</button>
+                            <button class="mt-1 btn btn-primary mb-1" type="button" id="submit_button">Submit</button>
+                        </div>
+                    </div>
+                    <div class="row layout-top-spacing">
+                        <div class="col-xl-12 col-lg-12 col-sm-12 pl-0 pr-0">
+                            <div class="widget-content br-6">
+                                <div class="table-responsive mb-4 mt-3" style="overflow-x: visible;">
+                                    <table id="style-3" class="table style-3 mt-3">
+                                        <thead>
+                                            <tr>
+                                                <th class="text-center">Sl.No.</th>
+                                                <th>QP&nbsp;Code</th>
+                                                <th>Bundle&nbsp;Code</th>
+                                                <th>Examiner</th>
+                                                <th>Level</th>
+                                                <th class="text-center">Paper&nbsp;Count</th>
+                                                <!-- <th class="text-center">Level</th> -->
+                                                <!-- <th>Level&nbsp;Answer&nbsp;Sheets</th> -->
+                                                <th>Status</th>
+                                                <th class="text-center">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="answersheetlist">
+                                            {% for i in data.answersheet_distribution_list %}
+                                            <tr>
+                                                <td class="text-center">{{ forloop.counter }}</td>
+                                                <td>{{i.qp_code}}</td>
+                                                <td>{{i.bundle_code}}</td>
+                                                <td>{{i.examiner|upper}}</td>
+                                                <!-- <td>{{i.course_name}}</td> -->
+                                                 <td>{{i.evaluvationtype}}</td>
+                                                <td class="text-center">{{i.total_no_of_answersheet}}</td>
+
+                                                <!-- <td>{{i.evaluvationtype}}</td> -->
+
+                                                {% if i.status == 'ALLOCATED' %}
+                                                <td>
+                                                    <div style="display: inline-flex;">
+                                                        <div class="t-dot bg-success mt-1" data-original-title=""
+                                                            title=""></div>&nbsp;Allocated
+                                                    </div>
+                                                </td>
+                                                {% elif i.status == 'EVALUATED' %}
+                                                <td>
+                                                    <div style="display: inline-flex;">
+                                                        <div class="t-dot bg-info mt-1" data-original-title="" title="">
+                                                        </div>&nbsp;Evaluated
+                                                    </div>
+                                                </td>
+
+
+                                                {% elif i.status == 'RECEIVED' %}
+                                                <td>
+                                                    <div style="display: inline-flex;">
+                                                        <div class="t-dot bg-warning mt-1" data-original-title=""
+                                                            title=""></div>&nbsp;Received
+                                                    </div>
+                                                </td>
+                                                {% else %}
+                                                <td>
+                                                    <div style="display: inline-flex;">
+                                                        <div class="t-dot bg-warning mt-1" data-original-title=""
+                                                            title=""></div>&nbsp;{{i.status}}
+                                                    </div>
+                                                </td>
+                                                {% endif %}
+
+                                                {% if i.status == 'ALLOCATED' %}
+
+                                                <td class="text-center">
+                                                    <div class="dropdown custom-dropdown">
+                                                        <a class="dropdown-toggle" href="#" role="button"
+                                                            id="dropdownMenuLink5" data-toggle="dropdown"
+                                                            aria-haspopup="true" aria-expanded="false">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                                                height="24" viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round"
+                                                                class="feather feather-more-horizontal">
+                                                                <circle cx="12" cy="12" r="1"></circle>
+                                                                <circle cx="19" cy="12" r="1"></circle>
+                                                                <circle cx="5" cy="12" r="1"></circle>
+                                                            </svg>
+                                                        </a>
+                                                        <div class="dropdown-menu widget-content"
+                                                            aria-labelledby="dropdownMenuLink5"
+                                                            style="will-change: transform;">
+                                                            <a class="dropdown-item view_button"
+                                                                href="javascript:void(0);" data-toggle="modal"
+                                                                data-target=".bd-example-modal-lg"
+                                                                data_colg="{{i.id}}">View</a>
+                                                            <a class="dropdown-item deletebutton"
+                                                                href="javascript:void(0);" data-value="{{i.bundle}}"
+                                                                data-examiner="{{i.id}}">Delete</a>
+                                                            <a class="dropdown-item print_button"
+                                                                href="javascript:void(0);"
+                                                                data-print="{{i.id}}">Print</a>
+                                                            <a class="dropdown-item reallocate_button"
+                                                                href="javascript:void(0);" data-toggle="modal"
+                                                                data-target=".bd-example-modal-lg1"
+                                                                data-url="{{i.bundle}}">Examiner Reallocation</a>
+
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                {% elif i.status == 'EVALUATED' %}
+
+                                                <td class="text-center">
+                                                    <div class="dropdown custom-dropdown">
+                                                        <a class="dropdown-toggle" href="#" role="button"
+                                                            id="dropdownMenuLink5" data-toggle="dropdown"
+                                                            aria-haspopup="true" aria-expanded="false">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                                                height="24" viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round"
+                                                                class="feather feather-more-horizontal">
+                                                                <circle cx="12" cy="12" r="1"></circle>
+                                                                <circle cx="19" cy="12" r="1"></circle>
+                                                                <circle cx="5" cy="12" r="1"></circle>
+                                                            </svg>
+                                                        </a>
+                                                        <div class="dropdown-menu widget-content"
+                                                            aria-labelledby="dropdownMenuLink5"
+                                                            style="will-change: transform;">
+                                                            <a class="dropdown-item view_button"
+                                                                href="javascript:void(0);" data-toggle="modal"
+                                                                data-target=".bd-example-modal-lg"
+                                                                data_colg="{{i.id}}">View</a>
+                                                            <a class="dropdown-item print_button"
+                                                                href="javascript:void(0);"
+                                                                data-print="{{i.id}}">Print</a>
+
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+
+
+
+                                                {% elif i.status == 'RECEIVED' %}
+
+                                                <td class="text-center">
+                                                    <div class="dropdown custom-dropdown">
+                                                        <a class="dropdown-toggle" href="#" role="button"
+                                                            id="dropdownMenuLink5" data-toggle="dropdown"
+                                                            aria-haspopup="true" aria-expanded="false">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                                                height="24" viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round"
+                                                                class="feather feather-more-horizontal">
+                                                                <circle cx="12" cy="12" r="1"></circle>
+                                                                <circle cx="19" cy="12" r="1"></circle>
+                                                                <circle cx="5" cy="12" r="1"></circle>
+                                                            </svg>
+                                                        </a>
+                                                        <div class="dropdown-menu widget-content"
+                                                            aria-labelledby="dropdownMenuLink5"
+                                                            style="will-change: transform;">
+                                                            <a class="dropdown-item view_button"
+                                                                href="javascript:void(0);" data-toggle="modal"
+                                                                data-target=".bd-example-modal-lg"
+                                                                data_colg="{{i.id}}">View</a>
+                                                            <a class="dropdown-item print_button"
+                                                                href="javascript:void(0);"
+                                                                data-print="{{i.id}}">Print</a>
+
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                {% else %}
+                                                <td class="text-center"></td>
+
+
+                                                {% endif %}
+
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Begin modal -->
+                                <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog"
+                                    aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-primary">
+                                                <div class="col row" style="text-align: center;">
+                                                    <div class="col" style="padding: 1% 0px 1% 0px;">
+                                                        <span style="margin: auto; font-size: 18px;">On-Screen Distribution</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-body">
+                                                <h6 style="padding: 10px 20px 0px 20px;">Details</h6>
+                                                <div class="table-responsive" style="padding: 0px 20px 0px 20px;">
+                                                    <table class="table">
+                                                        <tbody id="answersheetview_details">
+                                                            <!-- <tr>
+                                                                                <td class="text-primary">Examination</td>
+                                                                                <td>:</td>
+                                                                                <td>Lorem ipsum</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td class="text-primary">Exam Code</td>
+                                                                                <td>:</td>
+                                                                                <td>Lorem ipsum</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td class="text-primary">Course</td>
+                                                                                <td>:</td>
+                                                                                <td>Lorem ipsum</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td class="text-primary">Course Code</td>
+                                                                                <td>:</td>
+                                                                                <td>Lorem ipsum</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td class="text-primary">Date of Examination</td>
+                                                                                <td>:</td>
+                                                                                <td>Lorem ipsum</td>
+                                                                            </tr> -->
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-primary"
+                                                    data-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- End modal -->
+                                <!-- Begin modal -->
+                                <div class="modal fade bd-example-modal-lg1" tabindex="-1" role="dialog"
+                                    aria-labelledby="myLargeModalLabel" aria-hidden="true" id="modal_id1">
+                                    <div class="modal-dialog modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-primary">
+                                                <div class="col row" style="text-align: center;">
+                                                    <div class="col" style="padding: 1% 0px 1% 0px;">
+                                                        <span style="margin: auto; font-size: 18px;">Examiner
+                                                            Reallocation</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-body">
+                                                <h6 style="padding: 10px 20px 0px 20px;">Examiner</h6>
+                                                <div class="col-12" style="padding: 0px 20px 0px 20px;">
+                                                    <table>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td class="text-primary">Name</td>
+                                                                <td>&nbsp;:&nbsp;</td>
+                                                                <td id="examiner_name"></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="text-primary">Distribution Type</td>
+                                                                <td>&nbsp;:&nbsp;</td>
+                                                                <td id="distType"></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <hr>
+                                                </div>
+                                                <h6 style="padding: 10px 20px 0px 20px;">New Examiner</h6>
+                                                <div class="col-12" style="padding: 0px 20px 0px 20px;">
+                                                    <div class="row form-sec mt-3">
+                                                        <div class="col-6 mb-4 mt-3">
+                                                            <div class="select">
+                                                                <select class="select-text" id="distributiontype"
+                                                                    required>
+                                                                    <option value="" disabled selected></option>
+                                                                    <option value="Chief Examiner" data-code="101">Chief
+                                                                        cum additional Evaluation</option>
+                                                                    <option value="Additional Examiner" data-code="100">
+                                                                        Additional Evaluation</option>
+                                                                </select>
+                                                                <span class="select-highlight"></span>
+                                                                <span class="select-bar"></span>
+                                                                <label class="select-label">Distribution Type</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6 mb-4 mt-3">
+                                                            <div class="select">
+                                                                <select class="select-text" id="examinerlist" required>
+                                                                    <option value="" disabled selected></option>
+                                                                    <!-- <option value="1">Option 1</option>
+                                                                                    <option value="2">Option 2</option>
+                                                                                    <option value="3">Option 3</option> -->
+                                                                </select>
+                                                                <span class="select-highlight"></span>
+                                                                <span class="select-bar"></span>
+                                                                <label class="select-label">Select Examiner</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn" data-dismiss="modal">Close</button>
+                                                <button type="button" class="btn btn-primary" id="updatebutton"
+                                                    onclick="updateexaminer()">Update</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- End modal -->
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!--  END CONTENT AREA  -->
+
+{% endblock content %}
+
+{% block head %}
+
+
+<!-- BEGIN GLOBAL MANDATORY SCRIPTS -->
+<script src="{%static 'plugins/perfect-scrollbar/perfect-scrollbar.min.js'%}"></script>
+<script src="{%static 'assets/js/app.js'%}"></script>
+
+<!-- <script>
+        $(document).ready(function () {
+            App.init();
+        });
+    </script> -->
+
+<script src="{%static 'plugins/highlight/highlight.pack.js'%}"></script>
+<script src="{%static 'assets/js/custom.js'%}"></script>
+<!-- END GLOBAL MANDATORY SCRIPTS -->
+
+<!-- BEGIN PAGE LEVEL SCRIPTS -->
+<script src="{%static 'assets/js/scrollspyNav.js'%}"></script>
+<script src="{%static 'plugins/noUiSlider/nouislider.min.js'%}"></script>
+
+<script src="{%static 'plugins/noUiSlider/custom-nouiSlider.js'%}"></script>
+<script src="{%static 'plugins/bootstrap-range-Slider/bootstrap-rangeSlider.js'%}"></script>
+<!-- BEGIN PAGE LEVEL SCRIPTS -->
+
+
+<script>
+    function check() {
+        var x = document.getElementById("dbl");
+        x.style.display = "flex";
+    }
+</script>
+
+<script>
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+</script>
+
+<script src="{%static 'plugins/table/datatable/datatables.js'%}"></script>
+<script>
+    // var e;
+    c1 = $('#style-1').DataTable({
+        headerCallback: function (e, a, t, n, s) {
+            e.getElementsByTagName("th")[0].innerHTML = '<label class="new-control new-checkbox checkbox-outline-primary m-auto">\n<input type="checkbox" class="new-control-input chk-parent select-customers-info" id="customer-all-info">\n<span class="new-control-indicator"></span><span style="visibility:hidden">c</span>\n</label>'
+        },
+        columnDefs: [{
+            targets: 0, width: "30px", className: "", orderable: !1, render: function (e, a, t, n) {
+                return '<label class="new-control new-checkbox checkbox-outline-primary  m-auto">\n<input type="checkbox" class="new-control-input child-chk select-customers-info" id="customer-all-info">\n<span class="new-control-indicator"></span><span style="visibility:hidden">c</span>\n</label>'
+            }
+        }],
+        "oLanguage": {
+            "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+            "sInfo": "Showing page _PAGE_ of _PAGES_",
+            "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+            "sSearchPlaceholder": "Search...",
+            "sLengthMenu": "Results :  _MENU_",
+        },
+        "lengthMenu": [5, 10, 20, 50],
+        "pageLength": 5
+    });
+
+    multiCheck(c1);
+
+    c2 = $('#style-2').DataTable({
+        headerCallback: function (e, a, t, n, s) {
+            e.getElementsByTagName("th")[0].innerHTML = '<label class="new-control new-checkbox checkbox-outline-primary m-auto">\n<input type="checkbox" class="new-control-input chk-parent select-customers-info" id="customer-all-info">\n<span class="new-control-indicator"></span><span style="visibility:hidden">c</span>\n</label>'
+        },
+        columnDefs: [{
+            targets: 0, width: "30px", className: "", orderable: !1, render: function (e, a, t, n) {
+                return '<label class="new-control new-checkbox checkbox-outline-primary  m-auto">\n<input type="checkbox" class="new-control-input child-chk select-customers-info" id="customer-all-info">\n<span class="new-control-indicator"></span><span style="visibility:hidden">c</span>\n</label>'
+            }
+        }],
+        "oLanguage": {
+            "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+            "sInfo": "Showing page _PAGE_ of _PAGES_",
+            "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+            "sSearchPlaceholder": "Search...",
+            "sLengthMenu": "Results :  _MENU_",
+        },
+        "lengthMenu": [5, 10, 20, 50],
+        "pageLength": 5
+    });
+
+    multiCheck(c2);
+
+    c3 = $('#style-3').DataTable({
+        "oLanguage": {
+            "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+            "sInfo": "Showing page _PAGE_ of _PAGES_",
+            "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+            "sSearchPlaceholder": "Search...",
+            "sLengthMenu": "Results :  _MENU_",
+        },
+        "stripeClasses": [],
+
+        // "lengthMenu": [10, 20, 50,100],
+        // "pageLength": 100
+        paging: false,
+        info: false
+    });
+
+    multiCheck(c3);
+
+</script>
+<!-- END PAGE LEVEL SCRIPTS -->
+<!-- BEGIN THEME GLOBAL STYLE -->
+<script src="{%static 'plugins/sweetalerts/sweetalert2.min.js'%}"></script>
+<script src="{%static 'plugins/sweetalerts/custom-sweetalert.js'%}"></script>
+<!-- END THEME GLOBAL STYLE -->
+<script>
+    $('.widget-content .warning.confirm').on('click', function () {
+        swal({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Delete!',
+            padding: '2em'
+        }).then(function (result) {
+            if (result.value) {
+                swal(
+                    'Deleted!',
+                    'Question Paper Deleted.',
+                    'success'
+                )
+            }
+        })
+    })
+
+    $('.widget-content .warnings.confirms').on('click', function () {
+        swal({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Approve!',
+            padding: '2em'
+        }).then(function (result) {
+            if (result.value) {
+                swal(
+                    'Approved!',
+                    'Question Paper Approved.',
+                    'success'
+                )
+            }
+        })
+    })
+</script>
+<!-- Qp code and Date wise answer sheet distribution list -->
+
+<script>
+
+    var token = '{{csrf_token}}'
+    $(document).ready(function () {
+        $("#qpcode").change(function () {
+
+            $('#camp').empty();
+            var qpcode = $("#qpcode").val()
+
+
+
+            blockUI();
+            fetch("{% url 'answersheet-distbn-list' %}", {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json', "X-CSRFToken": token
+                },
+                body: JSON.stringify({
+                    "qpcode": qpcode,
+                })
+            }).then(function (res) { return res.json(); })
+                .then(function (data) {
+
+                    unblockUI();
+
+                    if (data.success == true) {
+
+                        var len = data.data.camp.length
+
+                        $("#camp").append('<option value="" disabled selected></option>')
+                        for (var i = 0; i < len; ++i) {
+
+                            $("#camp").append('<option  value="' + data.data.camp[i].campId + '">' + data.data.camp[i].camp + '</option>')
+                        }
+                        //
+
+                        //        
+                    }
+                    else {
+                        const toast = swal.mixin({
+                            toast: true,
+                            position: 'top',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            padding: '2em'
+                        });
+                        toast({
+                            type: 'error',
+                            title: "Oops",
+                            text: data.message,
+                            padding: '2em',
+                        }).then(() => {
+
+                        });
+                    }
+                });
+        });
+    });
+</script>
+
+
+<script>
+
+    $("#submit_button").click(function (event) {
+        var token = '{{csrf_token}}'
+        var qpcode = $("#qpcode option:selected").val();
+
+        // var date = $("#date").val();
+
+        // var campname = $("#camp").val();
+
+
+        date_search = []
+        // dates = []
+        // campes = []
+
+        // var urls = "{% url 'answersheet-distbn-filter-list' %}?format=json"
+        // if (date) {
+        //     dates.push(date)
+        // }
+        if (qpcode) {
+            date_search.push(qpcode)
+        }
+        // if (campname) {
+        //     campes.push(campname)
+        // }
+        // dates.push(date)
+        blockUI();
+        fetch("{% url 'onscreen_distribution_filterlist' %}", {
+            method: 'post',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json', "X-CSRFToken": token
+            },
+            body: JSON.stringify({
+
+                "search": date_search,
+                // "dates": dates,
+
+
+                // "camp": campes
+            })
+        }).then(function (data) { return data.json(); })
+
+            .then(function (data) {
+                unblockUI();
+
+                if (data.success == true) {
+
+                    $('#answersheetlist').empty()
+
+                    var answersheetDistributionList = data.data.answersheetDistributionList
+
+                    for (i = 0; i < answersheetDistributionList.length; i++) {
+
+                        if (answersheetDistributionList[i].status == "ALLOCATED") {
+                            var color = '<td><div style="display: inline-flex;"><div class="t-dot bg-success mt-1" data-original-title="" title=""></div>&nbsp;Allocated</div></td>'
+                            var dropdown = '<a class="dropdown-item view_button" href="javascript:void(0);" data-toggle="modal" data-target=".bd-example-modal-lg" data_colg=' + answersheetDistributionList[i].id + '>View</a><a class="dropdown-item deletebutton" href="javascript:void(0);" data-value=' + answersheetDistributionList[i].bundle + '  data-examiner=' + answersheetDistributionList[i].id + ' >Delete</a><a class="dropdown-item print_button" href="javascript:void(0);" data-print=' + answersheetDistributionList[i].id + '>Print</a><a class="dropdown-item" href="javascript:void(0);" data-toggle="modal"data-target=".bd-example-modal-lg1"  data-url=' + answersheetDistributionList[i].bundle + '>Examiner Reallocation</a>'
+                        }
+                        else if (answersheetDistributionList[i].status == "EVALUATED") {
+                            var color = '<td><div style="display: inline-flex;"><div class="t-dot bg-info mt-1" data-original-title="" title=""></div>&nbsp;Evaluated</div></td>'
+                            var dropdown = '<a class="dropdown-item view_button" href="javascript:void(0);" data-toggle="modal" data-target=".bd-example-modal-lg" data_colg=' + answersheetDistributionList[i].id + '>View</a><a class="dropdown-item print_button" href="javascript:void(0);" data-print=' + answersheetDistributionList[i].id + '>Print</a>'
+                        }
+                        else if (answersheetDistributionList[i].status == "ACTIVE") {
+                            var color = '<td><div style="display: inline-flex;"><div class="t-dot bg-info mt-1" data-original-title="" title=""></div>&nbsp;Active</div>'
+                            var dropdown = ''
+                        }
+                        else if (answersheetDistributionList[i].status == "RECEIVED") {
+                            var color = '<td><div style="display: inline-flex;"><div class="t-dot bg-warning mt-1" data-original-title="" title=""></div>&nbsp;Received</div></td>'
+                            var dropdown = '<a class="dropdown-item view_button" href="javascript:void(0);" data-toggle="modal" data-target=".bd-example-modal-lg" data_colg=' + answersheetDistributionList[i].id + '>View</a><a class="dropdown-item print_button" href="javascript:void(0);" data-print=' + answersheetDistributionList[i].id + '>Print</a>'
+                        }
+                        else {
+                            var color = '<td><div style="display: inline-flex;"><div class="t-dot bg-warning mt-1" data-original-title="" title=""></div>&nbsp;' + answersheetDistributionList[i].status + '</div></td>'
+                            var dropdown = ''
+
+                        }
+                        var examinername = answersheetDistributionList[i].examiner
+                        answersheetlist.innerHTML += '<tr class="table_row"><td class="text-center">' + (i + 1) + '</td><td class="">' + answersheetDistributionList[i].qpCode + '</td><td class="">' + answersheetDistributionList[i].bundleCode + '</td><td class="">' + examinername.toUpperCase() + '</td><td>' + answersheetDistributionList[i].evaluvationtype + '</td><td class="text-center">' + answersheetDistributionList[i].evaluatedNoOfAnswersheet + '/' + answersheetDistributionList[i].totalNoOfAnswersheet + '</td> ' + color + '<td class="text-center"><div class="dropdown custom-dropdown"><a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink5" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-horizontal"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg></a><div class="dropdown-menu widget-content" aria-labelledby="dropdownMenuLink5" style="will-change: transform;">' + dropdown + '</div></div></td></tr>'
+
+
+
+                    }
+                    // answersheetlist.innerHTML+='<tr></tr>'   
+                }
+            })
+
+
+    });
+
+
+
+
+</script>
+<!-- view button for modal view -->
+
+<script>
+   <!-- View button → opens modal and populates details -->
+    $(document).on('click', "a.view_button", function (e) {
+        e.preventDefault();
+        var token = '{{csrf_token}}';
+        var bundleid = Number($(this).attr("data_colg"));
+        var urls = "{% url 'onscreen-distbn-bundle-view' %}?format=json";
+
+        blockUI();
+        $.ajax({
+            headers: { "X-CSRFToken": token },
+            type: "GET",
+            url: urls,
+            data: { 'bundle_id': bundleid },
+
+            success: function (res) {
+                unblockUI();
+
+                if (res.success == true) {
+                    $("#answersheetview_details").empty();
+
+                    var d = res.data.answersheetDistributionBundleView;
+
+                    var rows = [
+                        { label: "Exam",                    value: d.exam },
+                        { label: "Exam Code",               value: d.examCode },
+                        { label: "Course",                  value: d.course },
+                        { label: "Course Code",             value: d.courseCode },
+                        { label: "Date of Examination",     value: d.dateOfExam },
+                        { label: "QP Code",                 value: d.qpCode },
+                        { label: "Examiner",                value: d.examiner },
+                        { label: "Username",                value: d.username },
+                        { label: "Email",                   value: d.emailId },
+                        { label: "Mobile Number",           value: d.mobileNum },
+                        { label: "Bundle Distribution Type",value: d.bundleDistributionType },
+                        { label: "Date of Distribution",    value: d.dateOfDistribution },
+                        { label: "No Of AS Distributed",    value: d.totalNoOfAnswersheet },
+                        { label: "No Of AS Evaluated",      value: d.noEvaluvated },
+                        { label: "No Of AS Return",         value: d.noOfAsReturn },
+                        { label: "Status",                  value: d.status },
+                    ];
+
+                    var html = '';
+                    rows.forEach(function(row) {
+                        html += '<tr>' +
+                                    '<td class="text-primary">' + row.label + '</td>' +
+                                    '<td>&nbsp;:&nbsp;</td>' +
+                                    '<td>' + (row.value !== null && row.value !== undefined ? row.value : 'NA') + '</td>' +
+                                '</tr>';
+                    });
+                    $("#answersheetview_details").html(html);
+
+                } else {
+                    const toast = swal.mixin({
+                        toast: true,
+                        position: 'top',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        padding: '2em'
+                    });
+                    toast({
+                        type: 'error',
+                        title: "Error",
+                        text: res.message,
+                        padding: '2em',
+                    });
+                }
+            },
+
+            error: function () {
+                unblockUI();
+                swal("Error!", "Could not fetch bundle details. Please try again.", "error");
+            }
+        });
+    });
+
+    let bundleid
+    let old_examiner_id
+    $('#modal_id1').on('shown.bs.modal', function (event) {
+        // alert("hi")
+        // e.preventDefault();
+        bundleid = $(event.relatedTarget).data("url");
+
+        var token = '{{csrf_token}}'
+        // bundleid = Number($(this).attr("data_colg"))
+        var urls = "{% url 're-examiner-allocation' %}?format=json"
+        blockUI();
+        $.ajax({
+            headers: { "X-CSRFToken": token },
+            type: "GET",
+            url: urls,
+            data: {
+                'bundle_id': bundleid,
+            },
+
+            success: function (res) {
+                unblockUI();
+
+                if (res.success == true) {
+                    old_examiner_id = res.data.oldExaminerId
+                    $("#examiner_name").empty()
+                    $("#distType").empty()
+
+                    $("#examiner_name").text(res.data.examinerName)
+                    $("#distType").text(res.data.distType)
+
+                }
+            }
+        })
+    })
+    $("#qpcode").change(function () {
+        $('#date').val('');
+    })
+    $('#distributiontype').change(function (e) {
+        e.preventDefault();
+        var token = '{{csrf_token}}'
+        var distributiontype = $("#distributiontype option:selected").val();
+
+        var urls = "{% url 'answersheet-re-examinerlist' %}?format=json"
+        blockUI();
+        $.ajax({
+            headers: { "X-CSRFToken": token },
+            type: "GET",
+            url: urls,
+            data: {
+                'bundle_id': bundleid,
+                "dist_type": distributiontype
+            },
+
+            success: function (res) {
+                unblockUI();
+
+                if (res.success == true) {
+                    $("#examinerlist").empty()
+                    $("#examinerlist").append('<option value=""></options>')
+
+                    $.each(res.data.examinerlist, function (i, value) {
+                        $("#examinerlist").append('<option value="' + value.id + '">' + value.username + '</options>')
+
+                    })
+                }
+            }
+        })
+
+
+    });
+
+
+    function updateexaminer() {
+        var distributiontype = $("#distributiontype option:selected").data('code');
+
+        var examinerval = $("#examinerlist option:selected").val();
+
+        var token = '{{csrf_token}}'
+
+        blockUI();
+        fetch("{% url 're-examiner-allocation' %}", {
+            method: 'post',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json', "X-CSRFToken": token
+            },
+            body: JSON.stringify({
+                "bundle_id": bundleid,
+                "dist_type_code": distributiontype,
+                "old_camp_role_allo_id": old_examiner_id,
+                "examiner_id": examinerval
+
+
+            })
+        }).then(function (res) { return res.json(); })
+            .then(function (data) {
+                unblockUI();
+                if (data.success == true) {
+
+                    swal({
+                        title: 'Done!',
+                        text: data.message,
+                        type: 'success',
+                        padding: '2em',
+
+
+                    }).then(() => {
+                        location.reload();
+                    });
+                    //   location.reload();
+                }
+                else {
+                    Swal({
+                        "title": "Oops!",
+                        type: 'error',
+                        "text": data.message,
+                        padding: '2em'
+                    }
+
+                    )
+                }
+
+            });
+
+    }
+
+    $(document).ready(function () {
+        $("#updatebutton").prop('disabled', true)
+    })
+    $('#examinerlist').change(function (e) {
+
+        $("#updatebutton").prop('disabled', false)
+
+    })
+    // $('.deletebutton').click(function (e) {
+    $(document).on('click', "a.deletebutton", function (e) {
+
+        var bundleidval = $(this).data("value");
+        var examineridval = $(this).data("examiner");
+        var token = '{{csrf_token}}'
+
+
+
+        swal({
+            title: 'Do you want to delete?',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            input: 'text',
+            padding: '2em',
+            inputValidator: (value) => {
+                return !value && 'Type the reason for deleting!'
+            }
+
+
+        }).then((result) => {
+            if (result.value) {
+                blockUI();
+                fetch("{% url 'bundle-delete' %}", {
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json', "X-CSRFToken": token
+                    },
+                    body: JSON.stringify({
+                        "bundle_id": bundleidval,
+                        "examiner_id": examineridval,
+                        "comments": result.value
+
+
+                    })
+                }).then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        unblockUI();
+                        if (data.success == true) {
+
+                            swal({
+                                title: 'Done!',
+                                text: data.message,
+                                type: 'success',
+                                padding: '2em',
+
+
+                            }).then(() => {
+                                location.reload();
+                            });
+                            //   location.reload();
+                        }
+                        else {
+                            Swal({
+                                "title": "Oops!",
+                                type: 'error',
+                                "text": data.message,
+                                padding: '2em'
+                            }
+
+                            )
+                        }
+
+                    });
+
+            }
+        })
+
+    })
+
+
+
+
+
+</script>
+
+<!-- script for print bundle -->
+<script>
+    $(document).on('click', "a.print_button", function (e) {
+        e.preventDefault();
+        var token = '{{csrf_token}}'
+        var bundleid = Number($(this).attr("data-print"))
+        var urls = "{% url 'answersheet-distbn-bundle-list-print' %}"
+        blockUI();
+        $.ajax({
+            headers: { "X-CSRFToken": token },
+            type: "POST",
+            url: urls,
+            data: {
+                'bundle_id': bundleid
+            },
+            success: function (res) {
+                unblockUI();
+                var w = window.open('', '_blank');
+                w.document.open();
+                w.document.write(res);
+                w.document.close()
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                swal("Error!", "Please try again", "error");
+            }
+        })
+    });
+</script>
+{% endblock head %}

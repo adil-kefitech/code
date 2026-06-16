@@ -1,0 +1,68 @@
+select * from uok.pgd_cntr_exam_mapping order by id desc
+select * from uok.pgd_std_tsfr_req where par_candidate_code in('47323557024')
+
+pgd_std_tsfr_req
+select * from uok.pgd_exam_cntr
+select * from uok.pgd_univ_dpt_mstr where title = 'Dept. of Physical Science'
+select * from uok.pgd_exam_reg_cntr_mapping order by id desc
+select * from uok.pgd_exam_reg where id in(296667)
+uok.pgd_exam_hal_alotmnt_cors
+select * from uok.pgd_collgs where code = '551'
+uok.pgd_exam_hal_alotmnt_stdnt
+INSERT INTO uok.pgd_exam_cntr (created_on,name, code, "College_id", department_id, created_by_id, status_id, updated_on)
+VALUES ('2024-11-07 13:08:57.581434+05:30','All Saints College', '100', 3, 84, 2, 1, NOW());
+select * from uok.pgd_exam_hal_alotmnt_stdnt order by id desc
+
+select * from uok.auth_user where username = ''
+
+select * from uok.pgd_exam where code = ''
+
+select * from uok.pgd_exam_reg where created_by_id in() and exam_id in()
+
+
+
+
+
+
+
+
+
+
+
+
+select * from uok.pgd_exam_hall where exam_center_id = 34
+and
+297,298,386,385,388,402,403,404,561,562,564,687,688,689,690,710,711,712,713,766,767,798,820,1124,1125,1130,1131,1132,1133,1138,1139,1160,1161,1166,1167,1298,1423,1424,1425,1427,1428,1429,1481,1501,1542,1621,1668,1669,1676,1677,1706,1707,1779,1780,1860,1817,1818,1861,1850,1858,1859,1863,1864,1865,1866,1867,1868,1869,1870,1872,1873,1874,1875,1876,1877,1878,1879,1880,1881,1991,2076,2125,2156,2208,2209,2254,2255,2256,2265,2266,2270,2310,2372,2382,2396,2454,2455,2471,2472,2477,2478,2505,2506,2517,2518,2630,2631,2647,2648,2754,2891,2892,2995,2996,2997,3129,3130,3192,3193,3221,3222,3242,3291,3292,3298,3299,3320,3321,3378,3401,3402,3425,3452,3453,3465,3480,3501,3502,3526,3544,3950,3951,3952,3953,3954,4063,4117,4131,4132,4137,4138,4145,4146,4197,4247,4248,4285,4295,4296,4308,4349,4350,4387,4390,4391,4405,4406,4413,4414,4415,4416,4417,4418,4419,4431,4432,4502,4503,4504
+
+select * from uok.pgd_exam_hal_alotmnt where exam_hall_id in(297,298,386,385,388,402,403,404,561,562,564,687,688,689,690,710,711,712,713,766,767,798,820,1124,1125,1130,1131,1132,1133,1138,1139,1160,1161,1166,1167,1298,1423,1424,1425,1427,1428,1429,1481,1501,1542,1621,1668,1669,1676,1677,1706,1707,1779,1780,1860,1817,1818,1861,1850,1858,1859,1863,1864,1865,1866,1867,1868,1869,1870,1872,1873,1874,1875,1876,1877,1878,1879,1880,1881,1991,2076,2125,2156,2208,2209,2254,2255,2256,2265,2266,2270,2310,2372,2382,2396,2454,2455,2471,2472,2477,2478,2505,2506,2517,2518,2630,2631,2647,2648,2754,2891,2892,2995,2996,2997,3129,3130,3192,3193,3221,3222,3242,3291,3292,3298,3299,3320,3321,3378,3401,3402,3425,3452,3453,3465,3480,3501,3502,3526,3544,3950,3951,3952,3953,3954,4063,4117,4131,4132,4137,4138,4145,4146,4197,4247,4248,4285,4295,4296,4308,4349,4350,4387,4390,4391,4405,4406,4413,4414,4415,4416,4417,4418,4419,4431,4432,4502,4503,4504)
+and exam_date = '2023-01-30'
+-- 11935
+
+select * from uok.pgd_exam_hal_alotmnt_cors where exam_hal_alotmnt_id in (11935)
+select * from uok.pgd_exam_hal_alotmnt_cors_tchr where exam_hal_alotmnt_cors_id in(11929)
+
+
+
+select * from uok.pgd_exam_hal_alotmnt_stdnt where exam_hal_alotmnt_cors_tchr_id = 11865
+and student_details_id = 3028
+-- insert/Delete the entry
+
+
+
+
+
+
+
+
+select * from uok.pgd_exam where code = '47120105'
+
+
+update 
+
+
+
+
+
+
+
+

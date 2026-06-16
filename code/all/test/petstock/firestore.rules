@@ -1,0 +1,120 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Functions
+    function isSignedIn() { return request.auth != null; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isOwner(uid) { return request.auth.uid == uid; }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'createdAt']) &&
+        data.email is string && data.email.size() <= 100 &&
+        data.createdAt == request.time &&
+        (data.get('displayName', '') is string) &&
+        (data.get('photoURL', '') is string);
+    }
+    
+    function isValidUserUpdate(data) {
+      return data.get('displayName', '') is string &&
+        data.get('photoURL', '') is string &&
+        data.get('email', '') is string;
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isOwner(userId) && isValidUser(incoming()) && incoming().email == request.auth.token.email;
+      allow update: if isSignedIn() && isOwner(userId) &&
+        isValidUserUpdate(incoming()) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL']);
+    }
+
+    function isValidListing(data) {
+      return data.keys().hasAll(['title', 'description', 'price', 'category', 'location', 'sellerId', 'status', 'createdAt', 'updatedAt']) &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
+        data.description is string && data.description.size() <= 2000 &&
+        data.price is number && data.price >= 0 &&
+        data.category is string && data.category.size() > 0 && data.category.size() <= 50 &&
+        (data.get('breed', '') is string) &&
+        (data.get('age', '') is string) &&
+        data.location is string && data.location.size() > 0 && data.location.size() <= 100 &&
+        (data.get('images', []) is list) && data.get('images', []).size() <= 10 &&
+        data.sellerId == request.auth.uid &&
+        data.status in ['active', 'sold', 'archived'] &&
+        data.createdAt == request.time &&
+        data.updatedAt == request.time;
+    }
+
+    function isValidListingUpdate(data) {
+      return (data.get('title', '') is string) &&
+        (data.get('description', '') is string) &&
+        (data.get('price', 0) is number) &&
+        (data.get('category', '') is string) &&
+        (data.get('breed', '') is string) &&
+        (data.get('age', '') is string) &&
+        (data.get('location', '') is string) &&
+        (data.get('images', []) is list) &&
+        data.get('status', existing().status) in ['active', 'sold', 'archived'] &&
+        data.updatedAt == request.time &&
+        data.sellerId == existing().sellerId &&
+        data.createdAt == existing().createdAt;
+    }
+
+    match /listings/{listingId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidListing(incoming());
+      allow update: if isSignedIn() && isOwner(existing().sellerId) &&
+        isValidListingUpdate(incoming()) &&
+        incoming().diff(existing()).affectedKeys().hasAny(['title', 'description', 'price', 'category', 'breed', 'age', 'location', 'images', 'status', 'updatedAt']);
+      allow delete: if isSignedIn() && isOwner(existing().sellerId);
+    }
+    
+    function isValidSavedListing(data) {
+      return data.keys().hasAll(['userId', 'listingId', 'createdAt']) &&
+        data.userId == request.auth.uid &&
+        data.listingId is string &&
+        data.createdAt == request.time &&
+        exists(/databases/$(database)/documents/listings/$(data.listingId));
+    }
+
+    match /savedListings/{savedId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidSavedListing(incoming());
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    function isValidChat(data) {
+      return data.keys().hasAll(['participantIds', 'listingId', 'updatedAt']) &&
+        data.participantIds is list && data.participantIds.size() == 2 &&
+        request.auth.uid in data.participantIds &&
+        data.participantIds[0] is string && data.participantIds[1] is string &&
+        data.listingId is string &&
+        exists(/databases/$(database)/documents/listings/$(data.listingId)) &&
+        data.updatedAt == request.time;
+    }
+
+    match /chats/{chatId} {
+      allow read: if isSignedIn() && request.auth.uid in resource.data.participantIds;
+      allow create: if isSignedIn() && isValidChat(incoming());
+      allow update: if isSignedIn() && request.auth.uid in existing().participantIds &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['updatedAt']);
+        
+      function isValidMessage(data) {
+        return data.keys().hasAll(['senderId', 'text', 'createdAt']) &&
+          data.senderId == request.auth.uid &&
+          data.text is string && data.text.size() > 0 && data.text.size() <= 1000 &&
+          data.createdAt == request.time;
+      }
+
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds;
+        allow create: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds && isValidMessage(incoming());
+      }
+    }
+  }
+}

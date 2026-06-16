@@ -1,0 +1,687 @@
+{% extends 'base.html'%}
+{% load static %}
+
+{% block additional_styles %}
+<style>
+    /* ── Toggle pill ─────────────────────────────────────────────────────── */
+    .report-toggle-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        background: #f1f3f7;
+        border-radius: 30px;
+        padding: 4px;
+        width: fit-content;
+        margin-bottom: 24px;
+    }
+    .report-toggle-wrap label {
+        margin: 0;
+        padding: 8px 28px;
+        border-radius: 26px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: #555;
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+    .report-toggle-wrap input[type="radio"] {
+        display: none;
+    }
+    .report-toggle-wrap input[type="radio"]:checked + label {
+        background: #8f12a5;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(143,18,165,0.25);
+    }
+
+    /* ── Form area ───────────────────────────────────────────────────────── */
+    .qp-input-section {
+        display: none;
+    }
+    .qp-input-section.active {
+        display: block;
+    }
+    .form-sec {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    .form-sec input {
+        width: 100%;
+        padding: 10px 14px 10px 14px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .form-sec input:focus {
+        border-color: #8f12a5;
+    }
+
+    /* ── Result card ─────────────────────────────────────────────────────── */
+    .result-card {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        padding: 22px 24px;
+        margin-bottom: 24px;
+    }
+    .result-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 4px;
+    }
+    .result-subtitle {
+        font-size: 13px;
+        color: #777;
+        margin-bottom: 18px;
+    }
+
+    /* ── Tables ──────────────────────────────────────────────────────────── */
+    .table thead th {
+        background: #8f12a5;
+        color: #fff;
+        font-weight: 600;
+        font-size: 13px;
+        border: none;
+        vertical-align: middle;
+    }
+    .table tbody tr:hover {
+        background: #f9f0fb;
+    }
+    .table td {
+        font-size: 13px;
+        vertical-align: middle;
+        border-color: #f0e6f4;
+    }
+
+    /* ── QP code badge ───────────────────────────────────────────────────── */
+    .qp-badge {
+        display: inline-block;
+        background: #f3e5f5;
+        color: #7b1fa2;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        margin: 2px 2px;
+    }
+    .course-badge {
+        display: inline-block;
+        background: #e8f4fd;
+        color: #1565c0;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        margin: 2px 2px;
+    }
+
+    /* ── Exam sub-row (inside QP code table) ─────────────────────────────── */
+    .exam-row-header {
+        background: #f8f0fb;
+        font-weight: 600;
+        font-size: 13px;
+        color: #6a0080;
+    }
+    .course-subrow td {
+        padding-top: 4px;
+        padding-bottom: 4px;
+        font-size: 12.5px;
+        border-top: none !important;
+        background: #fdf6ff;
+    }
+
+    /* ── Misc ────────────────────────────────────────────────────────────── */
+    .hidden { display: none; }
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 30px;
+        color: #8f12a5;
+    }
+    .error-msg {
+        display: none;
+        color: #c62828;
+        font-size: 13px;
+        margin-top: 8px;
+    }
+    .action-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 10px;
+    }
+    .btn-qp {
+        background: #8f12a5;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 24px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .btn-qp:hover { background: #6a0080; }
+    .btn-reset {
+        background: #e53935;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 18px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .btn-reset:hover { background: #b71c1c; }
+    .btn-print {
+        background: #1565c0;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 7px 18px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+    .btn-print:hover { background: #0d47a1; }
+    .no-data-msg {
+        text-align: center;
+        color: #999;
+        padding: 24px;
+        font-size: 14px;
+    }
+</style>
+<!-- DataTables -->
+<link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css' %}">
+<!-- SweetAlert -->
+<link href="{% static 'plugins/sweetalerts/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+{% endblock additional_styles %}
+
+
+{% block content %}
+<div class="row layout-top-spacing" id="cancel-row">
+
+    <!-- ── Page Header ────────────────────────────────────────────────────── -->
+    <div class="d-flex justify-content-between w-100">
+        <div class="layout-top-spacing mx-3">
+            <div class="seperator-header">
+                <h4>QP Report</h4>
+            </div>
+        </div>
+        <nav class="breadcrumb-one" aria-label="breadcrumb">
+            <ol class="breadcrumb bg-white mt-3">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">QP Report</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="container">
+        <div class="pl-4">
+            <div class="col mb-4" style="margin:auto;">
+
+                <!-- ── Toggle: choose report type ─────────────────────────── -->
+                <div class="report-toggle-wrap mt-3">
+                    <input type="radio" name="report_type" id="toggle_exam" value="exam" checked>
+                    <label for="toggle_exam">&#128196;&nbsp; By Exam Code</label>
+
+                    <input type="radio" name="report_type" id="toggle_qp" value="qp">
+                    <label for="toggle_qp">&#128203;&nbsp; By QP Code</label>
+                </div>
+
+
+                <!-- ════════════════════════════════════════════════════════ -->
+                <!--  SECTION 1 – By Exam Code                               -->
+                <!-- ════════════════════════════════════════════════════════ -->
+                <div id="section_exam" class="qp-input-section active">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-sec">
+                                <input type="text" id="exam_code_input" placeholder="Enter Exam Code (e.g. EX2024001)">
+                            </div>
+                            <div class="error-msg" id="exam_error"></div>
+                            <div class="action-row">
+                                <button class="btn-qp" id="btn_exam_submit">Search</button>
+                                <button class="btn-reset" id="btn_exam_reset">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="loading-spinner" id="exam_loader">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2">Fetching data…</p>
+                    </div>
+
+                    <!-- Result -->
+                    <div id="exam_result" class="hidden">
+                        <div class="result-card mt-3">
+                            <div class="result-title" id="exam_result_title"></div>
+                            <div class="result-subtitle" id="exam_result_subtitle"></div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span style="font-size:13px; color:#555;">
+                                    Showing only courses whose exam schedule has <strong>ended</strong>.
+                                </span>
+                                <button class="btn-print" onclick="printExamReport()">&#128424; Print</button>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table id="exam_table" class="table mt-2">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center" style="width:55px;">Sl.No.</th>
+                                            <th>Course Name</th>
+                                            <th class="text-center">Course Code</th>
+                                            <th class="text-center">Exam Ended On</th>
+                                            <th class="text-center">QP Code(s)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="exam_tbody"></tbody>
+                                </table>
+                            </div>
+                            <div class="no-data-msg hidden" id="exam_no_data">
+                                No ended-exam courses found for this examination.
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /section_exam -->
+
+
+                <!-- ════════════════════════════════════════════════════════ -->
+                <!--  SECTION 2 – By QP Code                                 -->
+                <!-- ════════════════════════════════════════════════════════ -->
+                <div id="section_qp" class="qp-input-section">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-sec">
+                                <input type="text" id="qp_code_input" placeholder="Enter QP Code">
+                            </div>
+                            <div class="error-msg" id="qp_error"></div>
+                            <div class="action-row">
+                                <button class="btn-qp" id="btn_qp_submit">Search</button>
+                                <button class="btn-reset" id="btn_qp_reset">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="loading-spinner" id="qp_loader">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2">Fetching data…</p>
+                    </div>
+
+                    <!-- Result -->
+                    <div id="qp_result" class="hidden">
+                        <div class="result-card mt-3">
+                            <div class="result-title" id="qp_result_title"></div>
+                            <div class="result-subtitle">
+                                One QP Code can be used across multiple examinations.
+                                Each exam row is expandable to show individual course details.
+                            </div>
+
+                            <div class="d-flex justify-content-end mb-2">
+                                <button class="btn-print" onclick="printQPReport()">&#128424; Print</button>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table id="qp_table" class="table mt-2">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center" style="width:55px;">Sl.No.</th>
+                                            <th>Examination</th>
+                                            <th class="text-center">Exam Code</th>
+                                            <th>Course Code(s)</th>
+                                            <th class="text-center" style="width:90px;">Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="qp_tbody"></tbody>
+                                </table>
+                            </div>
+                            <div class="no-data-msg hidden" id="qp_no_data">
+                                This QP Code has not been mapped to any examination.
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /section_qp -->
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+
+{% block head %}
+<script src="{% static 'plugins/table/datatable/datatables.js' %}"></script>
+<script src="{% static 'plugins/sweetalerts/sweetalert2.min.js' %}"></script>
+<script src="{% static 'plugins/sweetalerts/custom-sweetalert.js' %}"></script>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+//  Toggle between sections
+// ════════════════════════════════════════════════════════════════════════════
+document.querySelectorAll('input[name="report_type"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        if (this.value === 'exam') {
+            document.getElementById('section_exam').classList.add('active');
+            document.getElementById('section_qp').classList.remove('active');
+        } else {
+            document.getElementById('section_qp').classList.add('active');
+            document.getElementById('section_exam').classList.remove('active');
+        }
+    });
+});
+
+var csrfToken = '{{ csrf_token }}';
+
+// ════════════════════════════════════════════════════════════════════════════
+//  Helper – show error
+// ════════════════════════════════════════════════════════════════════════════
+function showError(elId, msg) {
+    var el = document.getElementById(elId);
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+function hideError(elId) {
+    var el = document.getElementById(elId);
+    el.style.display = 'none';
+    el.textContent = '';
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DataTable instances
+// ════════════════════════════════════════════════════════════════════════════
+var dtExam = null;
+var dtQP   = null;
+
+function dtOpts() {
+    return {
+        oLanguage: {
+            oPaginate: {
+                sPrevious: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>',
+                sNext: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>'
+            },
+            sInfo: "Showing page _PAGE_ of _PAGES_",
+            sSearch: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+            sSearchPlaceholder: "Search...",
+            sLengthMenu: "Results : _MENU_"
+        },
+        stripeClasses: [],
+        lengthMenu: [10, 25, 50, 100],
+        pageLength: 10
+    };
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  By Exam Code
+// ════════════════════════════════════════════════════════════════════════════
+document.getElementById('btn_exam_submit').addEventListener('click', function() {
+    hideError('exam_error');
+    var examCode = document.getElementById('exam_code_input').value.trim();
+    if (!examCode) {
+        showError('exam_error', 'Please enter an Exam Code.');
+        return;
+    }
+
+    // Reset previous result
+    document.getElementById('exam_result').classList.add('hidden');
+    document.getElementById('exam_no_data').classList.add('hidden');
+    document.getElementById('exam_loader').style.display = 'block';
+    document.getElementById('btn_exam_submit').disabled = true;
+
+    if (dtExam) { dtExam.destroy(); dtExam = null; }
+
+    $.ajax({
+        type: 'POST',
+        url: "{% url 'qp-report-by-exam-code' %}",
+        headers: { 'X-CSRFToken': csrfToken },
+        contentType: 'application/json',
+        dataType: 'json',
+        data: JSON.stringify({ exam_code: examCode }),
+        success: function(res) {
+            document.getElementById('exam_loader').style.display = 'none';
+            document.getElementById('btn_exam_submit').disabled = false;
+
+            if (!res.success) {
+                showError('exam_error', res.message || 'An error occurred.');
+                return;
+            }
+
+            var data = res.data;
+            document.getElementById('exam_result_title').textContent = data.examTitle || '';
+            document.getElementById('exam_result_subtitle').textContent = 'Exam Code: ' + (data.examCode || '');
+
+            var tbody = document.getElementById('exam_tbody');
+            tbody.innerHTML = '';
+
+            var courses = data.courseData || [];
+            if (courses.length === 0) {
+                document.getElementById('exam_no_data').classList.remove('hidden');
+            } else {
+                courses.forEach(function(c, idx) {
+                    var qpHtml = '';
+                    if (c.qpCodes && c.qpCodes.length > 0) {
+                        c.qpCodes.forEach(function(qp) {
+                            qpHtml += '<span class="qp-badge">' + qp + '</span>';
+                        });
+                    } else {
+                        qpHtml = '<span style="color:#999;">N/A</span>';
+                    }
+                    var row = '<tr>' +
+                        '<td class="text-center">' + (idx + 1) + '</td>' +
+                        '<td>' + c.courseName + '</td>' +
+                        '<td class="text-center"><span class="course-badge">' + c.courseCode + '</span></td>' +
+                        '<td class="text-center">' + c.examEndDate + '</td>' +
+                        '<td class="text-center">' + qpHtml + '</td>' +
+                        '</tr>';
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+                dtExam = $('#exam_table').DataTable(dtOpts());
+            }
+
+            document.getElementById('exam_result').classList.remove('hidden');
+        },
+        error: function(xhr) {
+            document.getElementById('exam_loader').style.display = 'none';
+            document.getElementById('btn_exam_submit').disabled = false;
+            var msg = (xhr.responseJSON && xhr.responseJSON.message)
+                      ? xhr.responseJSON.message
+                      : 'Invalid Exam Code or server error.';
+            showError('exam_error', msg);
+        }
+    });
+});
+
+document.getElementById('btn_exam_reset').addEventListener('click', function() {
+    document.getElementById('exam_code_input').value = '';
+    hideError('exam_error');
+    document.getElementById('exam_result').classList.add('hidden');
+    document.getElementById('exam_no_data').classList.add('hidden');
+    if (dtExam) { dtExam.destroy(); dtExam = null; }
+    document.getElementById('exam_tbody').innerHTML = '';
+    document.getElementById('btn_exam_submit').disabled = false;
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+//  By QP Code
+// ════════════════════════════════════════════════════════════════════════════
+document.getElementById('btn_qp_submit').addEventListener('click', function() {
+    hideError('qp_error');
+    var qpCode = document.getElementById('qp_code_input').value.trim();
+    if (!qpCode) {
+        showError('qp_error', 'Please enter a QP Code.');
+        return;
+    }
+
+    document.getElementById('qp_result').classList.add('hidden');
+    document.getElementById('qp_no_data').classList.add('hidden');
+    document.getElementById('qp_loader').style.display = 'block';
+    document.getElementById('btn_qp_submit').disabled = true;
+
+    if (dtQP) { dtQP.destroy(); dtQP = null; }
+
+    $.ajax({
+        type: 'POST',
+        url: "{% url 'qp-report-by-qp-code' %}",
+        headers: { 'X-CSRFToken': csrfToken },
+        contentType: 'application/json',
+        dataType: 'json',
+        data: JSON.stringify({ qp_code: qpCode }),
+        success: function(res) {
+            document.getElementById('qp_loader').style.display = 'none';
+            document.getElementById('btn_qp_submit').disabled = false;
+
+            if (!res.success) {
+                showError('qp_error', res.message || 'An error occurred.');
+                return;
+            }
+
+            var data = res.data;
+            document.getElementById('qp_result_title').textContent =
+                'QP Code: ' + (data.qpCode || qpCode);
+
+            var tbody = document.getElementById('qp_tbody');
+            tbody.innerHTML = '';
+
+        // Fallback for snake_case vs camelCase serialization 
+            var exams = data.examData || data.exam_data || [];
+            if (exams.length === 0) {
+                document.getElementById('qp_no_data').classList.remove('hidden');
+            } else {
+                exams.forEach(function(ex, idx) {
+                    var exTitle = ex.examTitle || ex.exam_title || '';
+                    var exCode = ex.examCode || ex.exam_code || '';
+                    var courseArr = ex.courses || [];
+
+                    // Build badges and detail list inside a SINGLE column
+                    var courseSummary = '<div class="course-summary-badges">';
+                    var detailListHtml = '<div class="course-detail-list mt-2" id="detail-list-' + idx + '" style="display:none;"><ul style="list-style:none; padding-left:0; margin-bottom:0;">';
+
+                    if (courseArr.length > 0) {
+                        courseArr.forEach(function(c) {
+                            var cCode = c.courseCode || c.course_code || '';
+                            var cName = c.courseName || c.course_name || '';
+                            
+                            courseSummary += '<span class="course-badge" title="' + cName + '">' + cCode + '</span>';
+                            detailListHtml += '<li style="padding:4px 0; border-bottom:1px dashed #eee; font-size:12.5px; color:#555;">' +
+                                              '<span style="color:#999;">&#8627;</span> <strong>' + cCode + '</strong> - ' + cName +
+                                              '</li>';
+                        });
+                    } else {
+                        courseSummary += '<span style="color:#999;">N/A</span>';
+                        detailListHtml += '<li>No courses mapped</li>';
+                    }
+                    courseSummary += '</div>';
+                    detailListHtml += '</ul></div>';
+
+                    // Clean 5-column row for DataTables
+                    var mainRow =
+                        '<tr>' +
+                        '<td class="text-center">' + (idx + 1) + '</td>' +
+                        '<td>' + exTitle + '</td>' +
+                        '<td class="text-center"><span class="qp-badge">' + exCode + '</span></td>' +
+                        '<td>' + courseSummary + detailListHtml + '</td>' +
+                        '<td class="text-center">' +
+                            '<button class="btn btn-sm btn-outline-primary" style="font-size:11px;" ' +
+                            'onclick="toggleDetail(' + idx + ', this)">&#9660; Expand</button>' +
+                        '</td>' +
+                        '</tr>';
+
+                    tbody.insertAdjacentHTML('beforeend', mainRow);
+                });
+
+                dtQP = $('#qp_table').DataTable(dtOpts());
+            }
+
+            document.getElementById('qp_result').classList.remove('hidden');
+
+
+        },
+
+
+        error: function(xhr) {
+            document.getElementById('qp_loader').style.display = 'none';
+            document.getElementById('btn_qp_submit').disabled = false;
+            var msg = (xhr.responseJSON && xhr.responseJSON.message)
+                      ? xhr.responseJSON.message
+                      : 'Invalid QP Code or server error.';
+            showError('qp_error', msg);
+        }
+    });
+});
+
+document.getElementById('btn_qp_reset').addEventListener('click', function() {
+    document.getElementById('qp_code_input').value = '';
+    hideError('qp_error');
+    document.getElementById('qp_result').classList.add('hidden');
+    document.getElementById('qp_no_data').classList.add('hidden');
+    if (dtQP) { dtQP.destroy(); dtQP = null; }
+    document.getElementById('qp_tbody').innerHTML = '';
+    document.getElementById('btn_qp_submit').disabled = false;
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+//  Toggle sub-rows for QP code result
+// ════════════════════════════════════════════════════════════════════════════
+
+// Toggle detail div instead of table rows
+function toggleDetail(idx, btn) {
+    var detailDiv = document.getElementById('detail-list-' + idx);
+    if (detailDiv) {
+        if (detailDiv.style.display === 'none') {
+            detailDiv.style.display = 'block';
+            btn.innerHTML = '&#9650; Collapse';
+        } else {
+            detailDiv.style.display = 'none';
+            btn.innerHTML = '&#9660; Expand';
+        }
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  Print helpers
+// ════════════════════════════════════════════════════════════════════════════
+function printExamReport() {
+    var title = document.getElementById('exam_result_title').textContent;
+    var subtitle = document.getElementById('exam_result_subtitle').textContent;
+    var tableHtml = document.getElementById('exam_table').outerHTML;
+    openPrint('QP Report – By Exam Code',
+    '<h3>' + title + '</h3><p>' + subtitle + '</p>' + tableHtml);
+}
+
+        
+        function printQPReport() {
+            var title = document.getElementById('qp_result_title').textContent;
+            // Expand all detail divs before printing
+            document.querySelectorAll('.course-detail-list').forEach(function(r) {
+                r.style.display = 'block';
+            });
+            // Change button text to collapse
+            document.querySelectorAll('.btn-outline-primary').forEach(function(btn) {
+                btn.innerHTML = '&#9650; Collapse';
+            });
+            
+            var tableHtml = document.getElementById('qp_table').outerHTML;
+            openPrint('QP Report – By QP Code', '<h3>' + title + '</h3>' + tableHtml);
+        }
+function openPrint(title, bodyContent) {
+    var w = window.open('', '_blank');
+    w.document.write(
+        '<html><head><title>' + title + '</title>' +
+        '<style>' +
+        'body{font-family:sans-serif; font-size:13px;}' +
+        'table{width:100%;border-collapse:collapse;margin:12px 0;}' +
+        'th,td{border:1px solid #ccc;padding:6px 10px;text-align:left;}' +
+        'th{background:#8f12a5;color:#fff;}' +
+        '.qp-badge,.course-badge{background:#f3e5f5;color:#7b1fa2;border-radius:4px;' +
+        'padding:2px 6px;font-size:11px;font-weight:600;margin:1px;}' +
+        'h3{color:#333;} p{color:#666;}' +
+        '</style></head>' +
+        '<body><h2>' + title + '</h2>' + bodyContent + '</body></html>'
+    );
+    w.document.close();
+    w.print();
+}
+</script>
+{% endblock head %}

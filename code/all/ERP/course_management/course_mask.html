@@ -1,0 +1,752 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block additional_styles %}
+<style>
+    .bootstrap-select:not([class*=col-]):not([class*=form-control]):not(.input-group-btn){width:100%!important}
+
+    /* ── Loading overlay ── */
+    .loading-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.35);z-index:9999;align-items:center;justify-content:center}
+    .loading-overlay.active{display:flex}
+    .loading-spinner{color:#fff;text-align:center}
+
+    /* ── Cards ── */
+    .mask-card{background:#fff;border:1px solid #e9ecef;border-radius:8px;padding:22px 26px;margin-bottom:20px}
+    .mask-card h5{font-size:15px;font-weight:700;color:#3b3f5c;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #eef2ff;display:flex;align-items:center;gap:8px}
+
+    /* ── Course search ── */
+    .course-search-wrap{position:relative;max-width:540px}
+    .course-search-wrap input{width:100%;height:48px;border:1px solid #bfc9d4;border-radius:5px;padding:0 14px 0 44px;font-size:15px;color:#3b3f5c;background:#fff;font-family:inherit;text-transform:uppercase}
+    .course-search-wrap input:focus{outline:none;border-color:#4361ee;box-shadow:0 0 0 2px rgba(67,97,238,.15)}
+    .course-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#aaa;pointer-events:none}
+    .course-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #bfc9d4;border-radius:6px;box-shadow:0 4px 18px rgba(0,0,0,.13);z-index:600;max-height:280px;overflow-y:auto;display:none}
+    .course-dropdown-item{padding:10px 16px;cursor:pointer;font-size:14px;color:#3b3f5c;border-bottom:1px solid #f1f2f3;display:flex;align-items:center;gap:10px}
+    .course-dropdown-item:last-child{border-bottom:none}
+    .course-dropdown-item:hover{background:#eef2ff;color:#4361ee}
+    .course-dropdown-item .cdi-code{background:#eef2ff;color:#4361ee;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap}
+    .course-dropdown-item .cdi-type{font-size:11px;color:#888;margin-left:auto;white-space:nowrap}
+    .search-hint{font-size:12px;color:#aaa;margin-top:7px}
+
+    /* ── Selected course card ── */
+    .selected-course-card{background:#f0fff4;border:1.5px solid #28a745;border-radius:8px;padding:16px 20px;margin-top:14px}
+    .selected-course-card .sc-code{font-size:22px;font-weight:800;color:#4361ee;letter-spacing:1px}
+    .selected-course-card .sc-name{font-size:16px;font-weight:600;color:#3b3f5c;margin-top:3px}
+    .selected-course-card .sc-meta{font-size:12px;color:#888;margin-top:3px}
+    .sc-change{font-size:12px;color:#4361ee;cursor:pointer;text-decoration:underline;margin-left:10px}
+    .sc-change:hover{color:#3251d4}
+    .badge-ctype{background:#e8f4fd;color:#0c5460;padding:4px 10px;border-radius:10px;font-size:13px;white-space:nowrap;font-weight:600}
+
+    /* ── Mappings table ── */
+    .mask-table{width:100%;border-collapse:collapse;font-family:'Inter','Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+    .mask-table thead th{background:#eef2ff;color:#4361ee;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;padding:10px 14px;border-bottom:2px solid #d0d9ff;white-space:nowrap;vertical-align:middle}
+    .mask-table tbody td{padding:11px 14px;border-bottom:1px solid #f1f2f3;color:#3b3f5c;vertical-align:middle;font-size:14px;font-weight:500}
+    .mask-table tbody tr:hover td{background:#f8f9fb}
+    .mask-table tbody tr.row-masked td{opacity:.45}
+    .mask-table tbody tr.row-masked td.col-action{opacity:1}
+
+    /* ── Status pills ── */
+    .pill-active{background:#d4edda;color:#155724;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:700;white-space:nowrap}
+    .pill-masked{background:#e2e3e5;color:#383d41;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:700;white-space:nowrap}
+
+    /* ── Badges ── */
+    .em-badge-sem{background:#e8f4fd;color:#0c5460;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap}
+    .em-badge-scheme{background:#fff3cd;color:#856404;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap}
+
+    /* ── Checkbox style ── */
+    .mask-chk{width:16px;height:16px;cursor:pointer;accent-color:#dc3545}
+    .mask-chk:disabled{cursor:not-allowed;opacity:.4}
+
+    /* ── Info banners ── */
+    .banner-info{background:#e8f4fd;border:1px solid #bee5eb;border-radius:6px;padding:11px 15px;font-size:13px;margin-bottom:14px}
+    .banner-warn{background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:11px 15px;font-size:13px;margin-bottom:14px;display:none}
+    .banner-danger{background:#fff5f5;border:1px solid #f5c6cb;border-radius:6px;padding:11px 15px;font-size:13px;margin-bottom:14px}
+
+    /* ── Action bar ── */
+    .mask-action-bar{
+        display:none;
+        align-items:center;
+        justify-content:space-between;
+        background:#fff8f8;
+        border:1.5px solid #f5c6cb;
+        border-radius:8px;
+        padding:14px 20px;
+        margin-top:16px;
+        flex-wrap:wrap;
+        gap:12px;
+    }
+    .mask-action-bar.visible{display:flex}
+    .selected-count-badge{
+        background:#dc3545;
+        color:#fff;
+        font-size:13px;
+        font-weight:700;
+        padding:5px 14px;
+        border-radius:20px;
+    }
+    .btn-mask-exec{
+        background:#dc3545;
+        color:#fff;
+        border:none;
+        border-radius:6px;
+        padding:10px 28px;
+        font-size:15px;
+        font-weight:700;
+        cursor:pointer;
+        transition:background .15s;
+    }
+    .btn-mask-exec:hover{background:#b02a37}
+    .btn-mask-exec:disabled{background:#aaa;cursor:not-allowed}
+    .mask-course-warn{
+        font-size:13px;
+        color:#856404;
+        font-weight:600;
+        display:none;
+    }
+
+    /* ── Unmask button ── */
+    .btn-unmask{
+        background:#fd7e14;
+        color:#fff;
+        border:none;
+        border-radius:5px;
+        padding:5px 13px;
+        font-size:13px;
+        font-weight:700;
+        cursor:pointer;
+        white-space:nowrap;
+        transition:background .15s;
+    }
+    .btn-unmask:hover{background:#e06910}
+</style>
+<link href="{% static 'plugins/sweetalerts/sweetalert2.min.css' %}" rel="stylesheet" type="text/css"/>
+<link href="{% static 'plugins/sweetalerts/sweetalert.css' %}" rel="stylesheet" type="text/css"/>
+<link href="{% static 'assets/css/components/custom-sweetalert.css' %}" rel="stylesheet" type="text/css"/>
+{% endblock additional_styles %}
+
+
+{% block content %}
+<!-- ── Loading overlay ── -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-light mb-2" style="width:3rem;height:3rem;" role="status"></div>
+        <div id="loadingText" style="font-size:16px;">Processing…</div>
+    </div>
+</div>
+
+<div class="row layout-top-spacing" id="cancel-row">
+
+    <!-- Page header -->
+    <div class="d-flex justify-content-between w-100">
+        <div class="layout-top-spacing mx-3">
+            <div class="seperator-header">
+                <h4>
+                    <span style="color:#dc3545;margin-right:6px;">&#128683;</span>
+                    Mask Course
+                </h4>
+            </div>
+        </div>
+        <div>
+            <nav class="breadcrumb-one" aria-label="breadcrumb">
+                <ol class="breadcrumb bg-white mt-3">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'course-management' %}">Course Management</a></li>
+                    <li class="breadcrumb-item active" aria-current="page"><span>Mask Course</span></li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="pl-4">
+            <div class="col mb-4" style="margin:auto;">
+
+
+                <!-- ══ SECTION A — Search & Select Course ════════════════════ -->
+                <div class="mask-card">
+                    <h5>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                             fill="none" stroke="#4361ee" stroke-width="2.5"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        Search &amp; Select Course
+                    </h5>
+
+                    <!-- Search input -->
+                    <div class="course-search-wrap" id="courseSearchWrap">
+                        <svg class="course-search-icon" xmlns="http://www.w3.org/2000/svg"
+                             width="18" height="18" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" id="courseSearchInput"
+                               placeholder="Type course code or name (min 2 chars)…"
+                               oninput="this.value=this.value.toUpperCase();onCourseSearchInput();"
+                               autocomplete="off">
+                        <div class="course-dropdown" id="courseDropdown"></div>
+                    </div>
+                    <div class="search-hint">Search in all courses — type at least 2 characters.</div>
+
+                    <!-- Selected course card (hidden until selection) -->
+                    <div class="selected-course-card" id="selectedCourseCard" style="display:none;">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                            <div>
+                                <div class="sc-code" id="scCode"></div>
+                                <div class="sc-name" id="scName"></div>
+                                <div class="sc-meta" id="scMeta"></div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                                <span class="badge-ctype" id="scType" style="font-size:13px;"></span>
+                                <span id="scStatusPill"></span>
+                                <span class="sc-change" onclick="clearSelection()">&#9998; Change</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="selectedCourseId">
+                    <input type="hidden" id="selectedCourseStatusId">
+                </div><!-- /Section A -->
+
+
+                <!-- ══ SECTION B — Programme Mappings (hidden until course selected) ══ -->
+                <div class="mask-card" id="mappingsCard" style="display:none;">
+                    <h5>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17"
+                             viewBox="0 0 24 24" fill="none" stroke="#dc3545" stroke-width="2.5"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 11 12 14 22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                        Select Programme Mappings to Mask
+                        <span id="mappingCountBadge"
+                              style="margin-left:6px;background:#4361ee;color:#fff;font-size:11px;
+                                     font-weight:700;padding:2px 10px;border-radius:10px;"></span>
+                        <span id="mappingsLoadingSpinner"
+                              style="font-size:12px;color:#888;margin-left:8px;display:none;">
+                            Loading…
+                        </span>
+                    </h5>
+
+                    <!-- Info banner -->
+                    <div class="banner-info">
+                        &#8505; Tick the checkboxes next to the programme mappings you want to mask,
+                        then click <strong>Mask Selected</strong>.
+                    </div>
+
+                    <!-- All-selected warning (shown dynamically) -->
+                    <div class="banner-warn" id="allSelectedWarn">
+                        &#9888; <strong>All active mappings are selected.</strong>
+                        The <strong>Course</strong> record will also be set to Masked.
+                    </div>
+
+                    <!-- Mappings table -->
+                    <div class="table-responsive">
+                        <table class="mask-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:44px;text-align:center;">
+                                        <input type="checkbox" class="mask-chk" id="selectAllChk"
+                                               title="Select all active mappings"
+                                               onchange="toggleSelectAll(this)">
+                                    </th>
+                                    <th style="width:38px;text-align:center;">#</th>
+                                    <th>Programme</th>
+                                    <th style="width:13%;">Code</th>
+                                    <th style="width:12%;">Semester</th>
+                                    <th style="width:16%;">Scheme</th>
+                                    <th style="width:70px;text-align:center;">Order</th>
+                                    <th style="width:95px;text-align:center;">Status</th>
+                                    <th style="width:100px;text-align:center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mappingsTableBody">
+                                <tr><td colspan="9" style="text-align:center;color:#aaa;padding:20px;">
+                                    Loading mappings…
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Action bar (shown when ≥1 checkbox is ticked) -->
+                    <div class="mask-action-bar" id="maskActionBar">
+                        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                            <span class="selected-count-badge" id="selectedCountBadge">0 selected</span>
+                            <span class="mask-course-warn" id="maskCourseWarn">
+                                &#9888; Course will also be masked Completely
+                            </span>
+                        </div>
+                        <button type="button" class="btn-mask-exec" id="maskExecBtn"
+                                onclick="executeMask()">
+                            &#128683;&nbsp;Mask Selected
+                        </button>
+                    </div>
+
+                </div><!-- /Section B -->
+
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+
+{% block head %}
+<script src="{% static 'assets/js/custom.js' %}"></script>
+<script src="{% static 'plugins/sweetalerts/sweetalert2.min.js' %}"></script>
+<script src="{% static 'plugins/sweetalerts/custom-sweetalert.js' %}"></script>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════════════
+   GLOBALS
+════════════════════════════════════════════════════════════════════════════ */
+/* Total number of PCS rows returned for the selected course (all statuses) */
+var gTotalMappings  = 0;
+/* Number of those that are currently Active (status_id != 5) */
+var gActiveMappings = 0;
+
+/* ── CSRF ── */
+function getCookie(n){
+    var v=null;
+    if(document.cookie&&document.cookie!==''){
+        document.cookie.split(';').forEach(function(c){
+            c=c.trim();
+            if(c.startsWith(n+'=')) v=decodeURIComponent(c.slice(n.length+1));
+        });
+    }
+    return v;
+}
+var csrftoken=getCookie('csrftoken');
+
+/* ── Helpers ── */
+function showLoading(msg){
+    document.getElementById('loadingText').textContent=msg||'Processing…';
+    document.getElementById('loadingOverlay').classList.add('active');
+}
+function hideLoading(){
+    document.getElementById('loadingOverlay').classList.remove('active');
+}
+function escHtml(s){
+    if(s===null||s===undefined) return '';
+    return String(s)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+}
+function escAttr(s){ return escHtml(s); }
+function post(url,body){
+    return fetch(url,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRFToken':csrftoken},
+        body:JSON.stringify(body)
+    }).then(function(r){return r.json();});
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SECTION A — COURSE SEARCH
+   Reuses the same endpoint as "Map Existing Course" in course_management.html
+════════════════════════════════════════════════════════════════════════════ */
+var courseSearchTimer=null;
+
+function onCourseSearchInput(){
+    clearTimeout(courseSearchTimer);
+    var q=document.getElementById('courseSearchInput').value.trim();
+    if(q.length<2){$('#courseDropdown').empty().hide();return;}
+    courseSearchTimer=setTimeout(function(){runCourseSearch(q);},350);
+}
+
+function runCourseSearch(q){
+    post("{% url 'course-management-course-search' %}",{query:q})
+    .then(function(data){
+        var $dd=$('#courseDropdown');
+        $dd.empty();
+        if(!data.success||!data.data.courses||data.data.courses.length===0){
+            $dd.append(
+                '<div class="course-dropdown-item" style="color:#888;cursor:default;justify-content:center;">'+
+                'No courses found</div>'
+            );
+        } else {
+            data.data.courses.forEach(function(c){
+                $dd.append(
+                    '<div class="course-dropdown-item"'+
+                    ' data-id="'+c.id+'"'+
+                    ' data-code="'+escAttr(c.code)+'"'+
+                    ' data-name="'+escAttr(c.name)+'"'+
+                    ' data-title="'+escAttr(c.title)+'"'+
+                    ' data-type="'+escAttr(c.courseType)+'"'+
+                    ' data-type-id="'+(c.courseTypeId||'')+'"'+
+                    ' onclick="selectCourse(this)">'+
+                    '<span class="cdi-code">'+escHtml(c.code)+'</span>'+
+                    '<span>'+escHtml(c.name)+'</span>'+
+                    '<span class="cdi-type">'+escHtml(c.courseType)+'</span>'+
+                    '</div>'
+                );
+            });
+        }
+        $dd.show();
+    });
+}
+
+/* Close dropdown when clicking outside */
+$(document).on('click',function(e){
+    if(!$(e.target).closest('#courseSearchWrap').length){
+        $('#courseDropdown').hide();
+    }
+});
+
+function selectCourse(el){
+    var $el=$(el);
+    var id=$el.data('id'),code=$el.data('code'),name=$el.data('name');
+    var title=$el.data('title'),type=$el.data('type');
+
+    $('#selectedCourseId').val(id);
+    $('#scCode').text(code);
+    $('#scName').text(name);
+    $('#scMeta').text(title ? 'Title: '+title : '');
+    $('#scType').text(type||'—');
+    $('#courseDropdown').hide();
+    document.getElementById('courseSearchInput').value='';
+
+    /* Show selected card */
+    $('#selectedCourseCard').show();
+
+    /* Reset & show mappings card */
+    resetMappingsSection();
+    $('#mappingsCard').show();
+
+    /* Load mappings */
+    loadMappings(id);
+
+    $('html,body').animate({scrollTop:$('#mappingsCard').offset().top-80},350);
+}
+
+function clearSelection(){
+    $('#selectedCourseId').val('');
+    $('#selectedCourseStatusId').val('');
+    $('#selectedCourseCard').hide();
+    resetMappingsSection();
+    $('#mappingsCard').hide();
+    document.getElementById('courseSearchInput').value='';
+    gTotalMappings=0;
+    gActiveMappings=0;
+}
+
+function resetMappingsSection(){
+    $('#mappingsTableBody').html(
+        '<tr><td colspan="8" style="text-align:center;color:#aaa;padding:20px;">Loading mappings…</td></tr>'
+    );
+    $('#mappingCountBadge').text('');
+    $('#selectAllChk').prop('checked',false).prop('disabled',false);
+    $('#allSelectedWarn').hide();
+    $('#maskActionBar').removeClass('visible');
+    $('#selectedCountBadge').text('0 selected');
+    $('#maskCourseWarn').hide();
+    $('#scStatusPill').html('');
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SECTION B — LOAD MAPPINGS
+════════════════════════════════════════════════════════════════════════════ */
+function loadMappings(courseId){
+    $('#mappingsLoadingSpinner').show();
+
+    post("{% url 'course-mask-mappings' %}",{course_id:parseInt(courseId)})
+    .then(function(data){
+        $('#mappingsLoadingSpinner').hide();
+        if(!data.success){
+            $('#mappingsTableBody').html(
+                '<tr><td colspan="8" style="text-align:center;color:#dc3545;padding:20px;">'+
+                escHtml(data.message||'Failed to load mappings.')+'</td></tr>'
+            );
+            return;
+        }
+        var d=data.data;
+        gTotalMappings  = d.totalMappings;
+        gActiveMappings = d.activeMappings;
+
+        /* Update count badge */
+        $('#mappingCountBadge').text(
+            d.totalMappings+' mapping'+(d.totalMappings===1?'':'s')
+        );
+
+        /* Update course status pill in the selected card */
+        var cStatusId=d.courseStatusId;
+        $('#selectedCourseStatusId').val(cStatusId);
+        if(cStatusId===5){
+            $('#scStatusPill').html('<span style="background:#e2e3e5;color:#383d41;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:700;">Status: Masked</span>');
+        } else {
+            $('#scStatusPill').html('<span style="background:#d4edda;color:#155724;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:700;">Status: Active</span>');
+        }
+
+        if(!d.mappings||d.mappings.length===0){
+            $('#mappingsTableBody').html(
+                '<tr><td colspan="9" style="text-align:center;color:#aaa;padding:24px;font-style:italic;">'+
+                'This course has no programme semester mappings yet.</td></tr>'
+            );
+            return;
+        }
+
+        buildMappingsTable(d.mappings);
+        updateActionBar();
+    })
+    .catch(function(){
+        $('#mappingsLoadingSpinner').hide();
+        $('#mappingsTableBody').html(
+            '<tr><td colspan="8" style="text-align:center;color:#dc3545;padding:20px;">'+
+            'Request failed. Please try again.</td></tr>'
+        );
+    });
+}
+
+function buildMappingsTable(mappings){
+    var html='';
+    mappings.forEach(function(m,idx){
+        var isMasked  = (m.pcsStatusId===5);
+        var rowClass  = isMasked ? ' class="row-masked"' : '';
+        var chkDisabled = isMasked ? ' disabled' : '';
+        var statusPill  = isMasked
+            ? '<span class="pill-masked">Masked</span>'
+            : '<span class="pill-active">Active</span>';
+        var actionCell  = isMasked
+            ? '<button type="button" class="btn-unmask" id="unmaskBtn_'+m.pcsId+'"'+
+              ' onclick="unmaskRow('+m.pcsId+',\''+escAttr(m.programme)+'\')">'+
+              '&#8635; Unmask</button>'
+            : '<span style="color:#ccc;font-size:13px;">—</span>';
+
+        html+=
+            '<tr id="pcsRow_'+m.pcsId+'"'+rowClass+'>'+
+            '<td class="col-action" style="text-align:center;">'+
+                '<input type="checkbox" class="mask-chk pcs-chk"'+
+                ' id="chk_'+m.pcsId+'"'+
+                ' data-pcs-id="'+m.pcsId+'"'+
+                ' data-is-masked="'+(isMasked?'1':'0')+'"'+
+                chkDisabled+
+                ' onchange="onCheckChange()">'+
+            '</td>'+
+            '<td style="text-align:center;color:#aaa;font-size:13px;">'+(idx+1)+'</td>'+
+            '<td style="font-weight:600;">'+escHtml(m.programme)+'</td>'+
+            '<td><code style="font-size:12px;color:#4361ee;background:#eef2ff;padding:2px 8px;border-radius:6px;">'+escHtml(m.programmeCode)+'</code></td>'+
+            '<td><span class="em-badge-sem">'+escHtml(m.semester)+'</span></td>'+
+            '<td><span class="em-badge-scheme">'+escHtml(m.scheme)+'</span></td>'+
+            '<td style="text-align:center;color:#555;">'+m.courseOrder+'</td>'+
+            '<td class="col-action" style="text-align:center;">'+statusPill+'</td>'+
+            '<td class="col-action" style="text-align:center;">'+actionCell+'</td>'+
+            '</tr>';
+    });
+    $('#mappingsTableBody').html(html);
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CHECKBOX LOGIC
+════════════════════════════════════════════════════════════════════════════ */
+function toggleSelectAll(masterChk){
+    /* Only affect enabled (active) checkboxes */
+    $('.pcs-chk:not(:disabled)').prop('checked', masterChk.checked);
+    updateActionBar();
+}
+
+function onCheckChange(){
+    /* Sync "Select All" master checkbox state */
+    var total   = $('.pcs-chk:not(:disabled)').length;
+    var checked = $('.pcs-chk:not(:disabled):checked').length;
+    $('#selectAllChk').prop('indeterminate', checked>0 && checked<total);
+    $('#selectAllChk').prop('checked', total>0 && checked===total);
+    updateActionBar();
+}
+
+function updateActionBar(){
+    var checkedIds=getCheckedPcsIds();
+    var count=checkedIds.length;
+
+    if(count===0){
+        $('#maskActionBar').removeClass('visible');
+        $('#allSelectedWarn').hide();
+        return;
+    }
+
+    $('#maskActionBar').addClass('visible');
+    $('#selectedCountBadge').text(count+' row'+(count===1?'':'s')+' selected');
+
+    /* All active rows selected → CourseMaster will also be masked */
+    var allActive = $('.pcs-chk:not(:disabled)').length; /* total active rows */
+    if(count===allActive && allActive>0){
+        $('#allSelectedWarn').show();
+        $('#maskCourseWarn').show();
+    } else {
+        $('#allSelectedWarn').hide();
+        $('#maskCourseWarn').hide();
+    }
+}
+
+function getCheckedPcsIds(){
+    var ids=[];
+    $('.pcs-chk:not(:disabled):checked').each(function(){
+        ids.push(parseInt($(this).data('pcs-id')));
+    });
+    return ids;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   EXECUTE MASK
+════════════════════════════════════════════════════════════════════════════ */
+function executeMask(){
+    var courseId=parseInt($('#selectedCourseId').val());
+    if(!courseId){swal('Error','No course selected.','error');return;}
+
+    var pcsIds=getCheckedPcsIds();
+    if(pcsIds.length===0){swal('Validation','Please select at least one mapping to mask.','warning');return;}
+
+    var activeTotal=$('.pcs-chk:not(:disabled)').length;
+    var maskAllFlag=(pcsIds.length===activeTotal && activeTotal>0);
+    var courseCode=$('#scCode').text();
+    var courseName=$('#scName').text();
+
+    var confirmMsg=
+        '<div style="text-align:left;font-size:14px;line-height:2;">'+
+        'Course: <strong style="color:#4361ee;">'+escHtml(courseCode)+'</strong> — '+escHtml(courseName)+'<br>'+
+        'Mappings to mask: <strong>'+pcsIds.length+'</strong><br>';
+    if(maskAllFlag){
+        confirmMsg+=
+            '<span style="color:#dc3545;font-weight:600;">'+
+            '&#9888; All active mappings selected — the <strong>Course</strong> '+
+            'will also be masked.</span><br>';
+    }
+    confirmMsg+='</div>';
+
+    swal({
+        title:              'Confirm Mask',
+        html:               confirmMsg,
+        type:               'warning',
+        showCancelButton:   true,
+        confirmButtonText:  '&#128683; Yes, Mask Now',
+        confirmButtonColor: '#dc3545',
+        cancelButtonText:   'Cancel',
+        padding:            '2em',
+    }).then(function(res){
+        if(!res.value) return;
+
+        showLoading('Masking '+pcsIds.length+' mapping(s)…');
+
+        post("{% url 'course-mask-execute' %}",{
+            course_id: courseId,
+            pcs_ids:   pcsIds,
+        })
+        .then(function(data){
+            hideLoading();
+            if(data.success){
+                /* Update rows in-place */
+                pcsIds.forEach(function(id){
+                    var $row=$('#pcsRow_'+id);
+                    $row.addClass('row-masked');
+                    /* Disable checkbox */
+                    $('#chk_'+id).prop('checked',false).prop('disabled',true).data('is-masked','1');
+                    /* Swap status pill */
+                    $row.find('.pill-active').replaceWith('<span class="pill-masked">Masked</span>');
+                    /* Swap action cell: show UNMASK button */
+                    var prog=$row.find('td:nth-child(3)').text().trim();
+                    $row.find('td:last-child').html(
+                        '<button type="button" class="btn-unmask" id="unmaskBtn_'+id+'"'+
+                        ' onclick="unmaskRow('+id+',\''+escAttr(prog)+'\')">'+
+                        '&#8635; Unmask</button>'
+                    );
+                });
+
+                /* If CourseMaster was masked, update the pill in the header card */
+                if(data.data.maskedCourse){
+                    $('#selectedCourseStatusId').val(5);
+                    $('#scStatusPill').html(
+                        '<span style="background:#e2e3e5;color:#383d41;padding:3px 10px;'+
+                        'border-radius:10px;font-size:12px;font-weight:700;">Course: Masked</span>'
+                    );
+                }
+
+                /* Reset checkboxes and action bar */
+                $('#selectAllChk').prop('checked',false).prop('indeterminate',false);
+                $('#maskActionBar').removeClass('visible');
+                $('#allSelectedWarn').hide();
+
+                swal('Masked!', data.message, 'success');
+            } else {
+                swal('Error', data.message||'Mask operation failed.', 'error');
+            }
+        })
+        .catch(function(){
+            hideLoading();
+            swal('Error','Request failed. Please try again.','error');
+        });
+    });
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   UNMASK A SINGLE ROW
+   Unmasking even one PCS row also unmasks the CourseMaster.
+════════════════════════════════════════════════════════════════════════════ */
+function unmaskRow(pcsId, programmeName){
+    var courseId=parseInt($('#selectedCourseId').val());
+    if(!courseId){swal('Error','No course selected.','error');return;}
+
+    var courseCode=$('#scCode').text();
+    var courseName=$('#scName').text();
+
+    swal({
+        title:              'Confirm Unmask',
+        html:
+            '<div style="text-align:left;font-size:14px;line-height:2;">'+
+            'Mapping: <strong>'+escHtml(programmeName)+'</strong><br>'+
+            'Course: <strong style="color:#4361ee;">'+escHtml(courseCode)+'</strong> — '+escHtml(courseName)+'<br>'+
+            '<span style="color:#fd7e14;font-weight:600;">'+
+            '蘵 This mapping and the <strong>Course</strong> will both be set back to Active.</span>'+
+            '</div>',
+        type:               'warning',
+        showCancelButton:   true,
+        confirmButtonText:  '蘵 Yes, Unmask',
+        confirmButtonColor: '#fd7e14',
+        cancelButtonText:   'Cancel',
+        padding:            '2em',
+    }).then(function(res){
+        if(!res.value) return;
+
+        showLoading('Unmasking…');
+
+        post("{% url 'course-mask-unmask' %}",{
+            course_id: courseId,
+            pcs_id:    pcsId,
+        })
+        .then(function(data){
+            hideLoading();
+            if(data.success){
+                var $row=$('#pcsRow_'+pcsId);
+                $row.removeClass('row-masked');
+                $('#chk_'+pcsId).prop('disabled',false).data('is-masked','0');
+                $row.find('.pill-masked').replaceWith('<span class="pill-active">Active</span>');
+                $('#unmaskBtn_'+pcsId).closest('td').html(
+                    '<span style="color:#ccc;font-size:13px;">—</span>'
+                );
+                /* CourseMaster is always unmasked too */
+                $('#selectedCourseStatusId').val('');
+                $('#scStatusPill').html(
+                    '<span style="background:#d4edda;color:#155724;padding:3px 10px;'+
+                    'border-radius:10px;font-size:12px;font-weight:700;">Course: Active</span>'
+                );
+                onCheckChange();
+                swal('Unmasked!', data.message, 'success');
+            } else {
+                swal('Error', data.message||'Unmask failed.', 'error');
+            }
+        })
+        .catch(function(){
+            hideLoading();
+            swal('Error','Request failed. Please try again.','error');
+        });
+    });
+}
+</script>
+{% endblock head %}

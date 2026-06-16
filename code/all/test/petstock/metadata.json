@@ -1,0 +1,6 @@
+{
+  "name": "Petstock",
+  "description": "A modern, scalable marketplace for buying and selling pets. Features user accounts, listings, search, and chatting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
