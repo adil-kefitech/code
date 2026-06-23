@@ -1,0 +1,103 @@
+uok.pgd_on_val_scn_as
+63525140001
+select * from uok.auth_user where username in('63525140001')
+select * from uok.pgd_on_val_scn_as ORDER by id desc 
+
+63020102
+--code to find bundle with user id
+select * from uok.pgd_bund_mstr where id in(
+	select bundle_id from uok.pgd_bndl_camp where sub_camp_id in(
+	select sub_camp_id from uok.pgd_camp_schedule where id in(
+	select camp_schedule_id from uok.pgd_camp_role_allocation where camp_user_id in(
+	select id from uok.auth_user 
+		where username = '2000')))) order by id desc
+
+uok.pgd_bund_mstr
+
+select * from uok.pgd_bund_mstr where bundle_code = 'W 5619101068' --103709
+
+uok.pgd_bund_examiner
+
+select * from uok.pgd_bund_examiner ORDER by id desc limit 100
+select * from uok.pgd_exam where code = '63020102' --77
+
+select * from uok.pgd_exam_schdl where exam_id in(77)
+
+select * from uok.pgd_on_val_scn_as where exam_schedule_id in(632)
+select * from uok.pgd_on_val_scn_as where bundle_id in(103709)
+uok.pgd_exam_schdl
+63020102
+
+63525140001
+
+
+SELECT
+    bm.id                  AS bundle_id,
+    bm.bundle_code,
+    bm.qp_code,
+    cs.id                  AS camp_schedule_id,
+    csc.exam_schedule_id
+FROM uok.pgd_bund_mstr bm
+JOIN uok.pgd_bndl_camp          bc  ON bc.bundle_id       = bm.id
+JOIN uok.pgd_camp_schedule      cs  ON cs.sub_camp_id     = bc.sub_camp_id
+LEFT JOIN uok.pgd_camp_schedule_course csc ON csc.camp_schedule_id = cs.id
+WHERE bm.id = 103709 
+
+
+
+SELECT *
+FROM uok.pgd_on_val_scn_as
+WHERE exam_schedule_id IN (
+    SELECT id
+    FROM uok.pgd_exam_schdl
+    WHERE programme_semester_course_id IN (
+        SELECT DISTINCT programme_course_semester_id
+        FROM uok.pgd_bund_mstr
+        WHERE qp_code = 'W 5619'
+    )
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

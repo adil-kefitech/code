@@ -1,5 +1,11 @@
 --code to find bundle with user id
-select * from uok.pgd_bund_mstr where id in(select bundle_id from uok.pgd_bndl_camp where sub_camp_id in(select sub_camp_id from uok.pgd_camp_schedule where id in(select camp_schedule_id from uok.pgd_camp_role_allocation where camp_user_id in(select id from uok.auth_user where username = '6238')))) and status_id ='33' order by id desc
+select * from uok.pgd_bund_mstr where id in(
+	select bundle_id from uok.pgd_bndl_camp where sub_camp_id in(
+	select sub_camp_id from uok.pgd_camp_schedule where id in(
+	select camp_schedule_id from uok.pgd_camp_role_allocation where camp_user_id in(
+	select id from uok.auth_user 
+		where username = '5049')))) order by id desc
+
 
 bineesh-999
 pgd_camp_schedule_course

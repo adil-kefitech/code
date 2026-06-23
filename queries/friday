@@ -1,0 +1,7 @@
+select * from uok.pgd_qp_exam where exam_id in(3280) and status_id in(78) --9309,9310,9312
+select * from uok.pgd_exam_schdl where exam_id in(3280) and status_id in(78)
+select * from uok.pgd_qp where id in(9309,9310,9312,9313)
+9309
+9310
+9313
+9312

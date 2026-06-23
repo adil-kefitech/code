@@ -1,0 +1,136 @@
+
+--Query 1 — What exams are linked to W5118?
+SELECT 
+    qp.id           AS qp_id,
+    qp.qp_code,
+    qpe.exam_id,
+    e.title         AS exam_title,
+    e.code          AS exam_code
+FROM uok.pgd_qp         qp
+JOIN uok.pgd_qp_exam    qpe ON qpe.qp_id  = qp.id
+JOIN uok.pgd_exam       e   ON e.id       = qpe.exam_id
+WHERE qp.qp_code = 'W 5118';
+
+
+
+
+--Query 2 — Overall paper breakdown for W5118 by how many examiners are assigned
+SELECT
+    sub.esa_count                                            AS "Examiners Assigned",
+    sub.status_id                                            AS "Status ID",
+    COUNT(*)                                                 AS "Paper Count",
+    SUM(CASE WHEN sub.dfm_id IS NULL THEN 1 ELSE 0 END)    AS "Papers with NULL dfm (blocked from 1st level)"
+FROM (
+    SELECT
+        sa.id,
+        sa.dfm_id,
+        sa.status_id,
+        COUNT(esa.id) AS esa_count
+    FROM uok.pgd_on_val_scn_as        sa
+    JOIN uok.pgd_bund_mstr            bm  ON bm.id = sa.bundle_id
+    LEFT JOIN uok.pgd_on_val_exr_scn_as esa ON esa.answersheet_id = sa.id
+    WHERE bm.qp_code = 'W 5118'
+    GROUP BY sa.id, sa.dfm_id, sa.status_id
+) sub
+GROUP BY sub.esa_count, sub.status_id
+ORDER BY sub.esa_count;
+
+
+--Query 3 — Which papers with W5118 bundle ARE visible to first level vs blocked, and why
+SELECT
+    sa.id                                       AS scanned_as_id,
+    sa.dfm_id,
+    sa.status_id,
+    COUNT(esa.id)                               AS examiner_count,
+    CASE
+        WHEN sa.dfm_id IS NULL          THEN 'BLOCKED: dfm is NULL'
+        WHEN COUNT(esa.id) > 0          THEN 'BLOCKED: already assigned to ' || COUNT(esa.id)::text || ' examiner(s)'
+        ELSE                                 'ELIGIBLE for 1st level'
+    END AS "1st Level Status"
+FROM uok.pgd_on_val_scn_as          sa
+JOIN uok.pgd_bund_mstr              bm  ON bm.id = sa.bundle_id
+LEFT JOIN uok.pgd_on_val_exr_scn_as esa ON esa.answersheet_id = sa.id
+WHERE bm.qp_code = 'W 5118'
+GROUP BY sa.id, sa.dfm_id, sa.status_id
+ORDER BY examiner_count DESC, sa.id;
+
+
+
+
+
+
+
+
+
+--Query 4 — Check whether 2nd level grabbed papers from OTHER QP codes for the same exam+course
+
+-- Replace <exam_id_from_query1> and <pgmcourseid> with actual values
+SELECT
+    bm.qp_code                  AS "Bundle QP Code",
+    evt.code                    AS "Eval Type Code (101=1st, 102=2nd)",
+    evt.name                    AS "Eval Type Name",
+    COUNT(DISTINCT esa.id)      AS "Sheets Assigned via this eval type"
+FROM uok.pgd_on_val_exr_scn_as     esa
+JOIN uok.pgd_on_val_scn_as          sa  ON sa.id = esa.answersheet_id
+JOIN uok.pgd_exam_schdl             es  ON es.id = sa.exam_schedule_id
+JOIN uok.pgd_bund_examiner          be  ON be.camp_rol_allo_id = esa.examiner_id
+JOIN uok.pgd_mrk_evl_type           evt ON evt.id = be.evaluation_type_id
+LEFT JOIN uok.pgd_bund_mstr         bm  ON bm.id = sa.bundle_id
+WHERE es.exam_id = 3568
+  AND es.programme_semester_course_id = 28535
+GROUP BY bm.qp_code, evt.code, evt.name
+ORDER BY evt.code, bm.qp_code;
+
+
+
+--Query 5 — The "remaining papers" the user expects to see in first level
+-- Replace <exam_id> and <pgmcourseid>
+SELECT
+    bm.qp_code,
+    sa.id           AS scanned_as_id,
+    sa.dfm_id,
+    sa.status_id,
+    COUNT(esa.id)   AS esa_count
+FROM uok.pgd_on_val_scn_as          sa
+JOIN uok.pgd_exam_schdl             es  ON es.id = sa.exam_schedule_id
+LEFT JOIN uok.pgd_bund_mstr         bm  ON bm.id = sa.bundle_id
+LEFT JOIN uok.pgd_on_val_exr_scn_as esa ON esa.answersheet_id = sa.id
+WHERE es.exam_id = 3568
+  AND es.programme_semester_course_id = 28535
+GROUP BY bm.qp_code, sa.id, sa.dfm_id, sa.status_id
+HAVING COUNT(esa.id) = 0
+   AND sa.dfm_id IS NOT NULL
+ORDER BY bm.qp_code;
+
+
+
+
+
+
+SELECT DISTINCT 
+    es.programme_semester_course_id  AS pgmcourseid,
+    pcs.course_num,
+    es.exam_id
+FROM uok.pgd_on_val_scn_as    sa
+JOIN uok.pgd_bund_mstr         bm  ON bm.id  = sa.bundle_id
+JOIN uok.pgd_exam_schdl        es  ON es.id  = sa.exam_schedule_id
+JOIN uok.pgd_prg_cours_mstr    pcs ON pcs.id = es.programme_semester_course_id
+WHERE bm.qp_code = 'W 5118';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
